@@ -38,8 +38,8 @@ impl Default for AnimationController {
             previous_state: AnimationState::Idle,
             state_timer: 0.0,
             transition_time: 0.1,      // 100ms transitions
-            velocity_threshold: 0.5,    // Walking speed threshold
-            run_threshold: 8.0,         // Running speed threshold  
+            velocity_threshold: 0.5,    // Kept for backward compatibility (unused)
+            run_threshold: 8.0,         // Kept for backward compatibility (unused)  
             air_time_threshold: 0.2,    // 200ms before falling animation
         }
     }
