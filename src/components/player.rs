@@ -5,21 +5,25 @@ use bevy::prelude::*;
 #[derive(Component)]
 pub struct Player;
 
-/// Player movement component - handles player-specific movement properties
-/// Separate from camera for better separation of concerns
+/// Player movement configuration - physics-based movement properties
+/// Works with Tnua character controller for realistic movement
 #[derive(Component)]
-pub struct PlayerMovement {
-    pub speed: f32,
+pub struct PlayerMovementConfig {
+    pub walk_speed: f32,
     pub run_speed: f32,
-    pub is_running: bool,
+    pub jump_height: f32,
+    pub acceleration: f32,
+    pub air_acceleration: f32,
 }
 
-impl Default for PlayerMovement {
+impl Default for PlayerMovementConfig {
     fn default() -> Self {
         Self {
-            speed: 5.0,
-            run_speed: 10.0,
-            is_running: false,
+            walk_speed: 8.0,
+            run_speed: 12.0,
+            jump_height: 4.0,
+            acceleration: 40.0,
+            air_acceleration: 20.0,
         }
     }
 }

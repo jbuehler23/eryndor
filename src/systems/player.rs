@@ -1,16 +1,16 @@
 use bevy::prelude::*;
+use avian3d::prelude::*;
 use crate::resources::InputResource;
-use crate::components::{Player, PlayerMovement};
+use crate::components::{Player, PlayerMovementConfig};
 
-/// Player movement system - moves player based on input
-/// Following Single Responsibility: only handles player movement
+/// Physics-based player movement system using Avian physics directly
+/// Following Single Responsibility: only handles player movement with physics
 pub fn move_player(
-    time: Res<Time>,
     input: Res<InputResource>,
-    mut player_query: Query<(&mut Transform, &PlayerMovement), With<Player>>,
+    mut player_query: Query<(&mut LinearVelocity, &PlayerMovementConfig), With<Player>>,
     camera_query: Query<&Transform, (With<crate::systems::camera::GameCamera>, Without<Player>)>,
 ) {
-    let Ok((mut player_transform, movement)) = player_query.single_mut() else {
+    let Ok((mut velocity, movement_config)) = player_query.single_mut() else {
         return;
     };
     
@@ -29,6 +29,7 @@ pub fn move_player(
     if input.left { movement_dir.x -= 1.0; }
     if input.right { movement_dir.x += 1.0; }
 
+    // Handle movement
     if movement_dir.length() > 0.0 {
         movement_dir = movement_dir.normalize();
         
@@ -45,18 +46,24 @@ pub fn move_player(
         
         // Determine speed (running vs walking)
         let speed = if input.up { // Shift for running
-            movement.run_speed
+            movement_config.run_speed
         } else {
-            movement.speed
+            movement_config.walk_speed
         };
         
-        // Apply movement
-        player_transform.translation += world_movement * speed * time.delta_secs();
-        
-        // Rotate player to face movement direction
-        if world_movement.length() > 0.0 {
-            let target_rotation = Quat::from_rotation_y(world_movement.z.atan2(world_movement.x) - std::f32::consts::FRAC_PI_2);
-            player_transform.rotation = player_transform.rotation.lerp(target_rotation, time.delta_secs() * 10.0);
+        // Apply velocity directly to physics body
+        velocity.x = world_movement.x * speed;
+        velocity.z = world_movement.z * speed;
+    } else {
+        // Stop horizontal movement when no input
+        velocity.x = 0.0;
+        velocity.z = 0.0;
+    }
+    
+    // Handle jumping - give upward velocity
+    if input.down { // Space for jumping (input.up is shift for running)
+        if velocity.y.abs() < 0.1 { // Only jump if not already in air
+            velocity.y = (2.0 * 9.81 * movement_config.jump_height).sqrt(); // Physics formula for jump
         }
     }
 }

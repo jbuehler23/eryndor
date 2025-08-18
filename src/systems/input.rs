@@ -22,7 +22,7 @@ pub fn handle_input(
     input_resource.left = keyboard.pressed(KeyCode::KeyA);
     input_resource.right = keyboard.pressed(KeyCode::KeyD);
     input_resource.up = keyboard.pressed(KeyCode::ShiftLeft); // Shift for running
-    input_resource.down = keyboard.pressed(KeyCode::ControlLeft);
+    input_resource.down = keyboard.pressed(KeyCode::Space); // Space for jumping
     
     // Mouse button state tracking
     input_resource.mouse_left_just_pressed = mouse.just_pressed(MouseButton::Left);

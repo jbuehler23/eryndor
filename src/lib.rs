@@ -1,4 +1,7 @@
 use bevy::prelude::*;
+use avian3d::prelude::*;
+// use bevy_tnua::prelude::*;
+// use bevy_tnua_avian3d::*;
 
 pub mod systems;
 pub mod components;
@@ -18,6 +21,13 @@ pub struct EryndorPlugin;
 impl Plugin for EryndorPlugin {
     fn build(&self, app: &mut App) {
         app
+            // Physics - Avian 3D integration
+            .add_plugins(PhysicsPlugins::default())
+            .insert_resource(Gravity(Vec3::NEG_Y * 9.81)) // Earth-like gravity
+            
+            // Character controller - Direct Avian physics for now
+            // TODO: Add Tnua integration once API is clarified
+            
             // Resources - Global state
             .insert_resource(load_config())
             .init_resource::<InputResource>()

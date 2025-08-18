@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use avian3d::prelude::*;
 use crate::resources::{GameConfig, InputResource};
 
 // Camera component - Single responsibility with spherical coordinates
@@ -52,7 +53,7 @@ pub fn setup_camera(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    // Spawn the player entity first
+    // Spawn the player entity with physics
     commands.spawn((
         // Visual representation - simple capsule for now
         Mesh3d(meshes.add(Capsule3d::new(0.5, 1.8))),
@@ -60,10 +61,18 @@ pub fn setup_camera(
             base_color: Color::srgb(0.2, 0.4, 0.8), // Blue player
             ..default()
         })),
-        Transform::from_xyz(0.0, 1.0, 0.0), // Standing on ground
-        // Player components
+        Transform::from_xyz(0.0, 2.0, 0.0), // Start above ground to let physics settle
+        
+        // Physics components - Avian 3D
+        RigidBody::Kinematic, // Kinematic for responsive character control
+        Collider::capsule(1.8, 0.5), // Height, radius - matches visual mesh
+        
+        // Direct physics approach - will add character controller later
+        LinearVelocity::default(),
+        
+        // Game components
         crate::components::Player,
-        crate::components::PlayerMovement::default(),
+        crate::components::PlayerMovementConfig::default(),
         crate::components::PlayerStats::default(),
     ));
 
@@ -75,7 +84,7 @@ pub fn setup_camera(
         GameCamera::default(),
     ));
 
-    // Create a ground plane - Basic 3D scene
+    // Create a ground plane with physics - Basic 3D scene
     commands.spawn((
         Mesh3d(meshes.add(Plane3d::default().mesh().size(50.0, 50.0))),
         MeshMaterial3d(materials.add(StandardMaterial {
@@ -83,16 +92,24 @@ pub fn setup_camera(
             ..default()
         })),
         Transform::from_xyz(0.0, 0.0, 0.0),
+        
+        // Physics for ground collision
+        RigidBody::Static, // Static body for immovable ground
+        Collider::cuboid(25.0, 0.1, 25.0), // Match ground plane size
     ));
 
-    // Add a simple cube for reference
+    // Add a simple cube for reference with physics
     commands.spawn((
         Mesh3d(meshes.add(Cuboid::new(2.0, 2.0, 2.0))),
         MeshMaterial3d(materials.add(StandardMaterial {
             base_color: Color::srgb(0.8, 0.7, 0.6),
             ..default()
         })),
-        Transform::from_xyz(0.0, 1.0, 0.0),
+        Transform::from_xyz(5.0, 2.0, 0.0), // Move it to the side so player doesn't spawn inside
+        
+        // Physics for the cube
+        RigidBody::Static, // Static reference object
+        Collider::cuboid(1.0, 1.0, 1.0), // Match visual size
     ));
 
     // Add a light source
@@ -106,19 +123,19 @@ pub fn setup_camera(
     ));
 }
 
-// WoW-style camera system with proper orbit controls
+// WoW-style camera system with proper orbit controls for physics player
 pub fn update_camera(
     time: Res<Time>,
     config: Res<GameConfig>,
     input: Res<InputResource>,
     mut camera_query: Query<(&mut Transform, &mut GameCamera)>,
-    mut player_query: Query<&mut Transform, (With<crate::components::Player>, Without<GameCamera>)>,
+    player_query: Query<&Transform, (With<crate::components::Player>, Without<GameCamera>)>,
 ) {
     let Ok((mut camera_transform, mut camera)) = camera_query.single_mut() else {
         return;
     };
     
-    let Ok(mut player_transform) = player_query.single_mut() else {
+    let Ok(player_transform) = player_query.single() else {
         return;
     };
 
@@ -134,17 +151,13 @@ pub fn update_camera(
             camera.pitch = camera.pitch.clamp(camera.min_pitch, camera.max_pitch);
             
         } else if input.mouse_right_held && !input.mouse_left_held {
-            // RIGHT DRAG: Rotate player AND camera together (mouselook)
+            // RIGHT DRAG: Rotate camera together with player direction (mouselook)
+            // Note: Player rotation with physics needs to be handled in the player system
             let yaw_delta = -input.mouse_delta.x * sensitivity;
             let pitch_delta = input.mouse_delta.y * sensitivity;
             
-            // Rotate player character around Y axis
-            player_transform.rotate_y(yaw_delta);
-            
-            // Update camera yaw to match player rotation
+            // Update camera yaw and pitch together
             camera.yaw += yaw_delta;
-            
-            // Update camera pitch
             camera.pitch += pitch_delta;
             camera.pitch = camera.pitch.clamp(camera.min_pitch, camera.max_pitch);
             
