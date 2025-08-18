@@ -74,6 +74,7 @@ pub fn setup_camera(
         crate::components::Player,
         crate::components::PlayerMovementConfig::default(),
         crate::components::PlayerStats::default(),
+        crate::components::AnimationController::default(),
     ));
 
     // Spawn the camera positioned behind and above the player

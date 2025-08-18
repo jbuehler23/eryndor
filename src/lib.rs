@@ -40,12 +40,16 @@ impl Plugin for EryndorPlugin {
                 setup_camera,
                 setup_ui,
                 load_initial_assets,
+                setup_animation_assets,
             ))
             .add_systems(Update, (
                 handle_input,
                 move_player.after(handle_input),
+                update_animation_states.after(move_player),
+                play_animations.after(update_animation_states),
                 update_camera.after(move_player),
                 update_ui,
+                debug_animation_state.after(update_animation_states),
                 check_asset_loading,
                 update_config_system,
                 save_config_on_exit,
