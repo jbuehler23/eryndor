@@ -64,11 +64,16 @@ pub fn setup_camera(
         Transform::from_xyz(0.0, 2.0, 0.0), // Start above ground to let physics settle
         
         // Physics components - Avian 3D
-        RigidBody::Kinematic, // Kinematic for responsive character control
+        RigidBody::Dynamic, // Dynamic for gravity and realistic physics
         Collider::capsule(1.8, 0.5), // Height, radius - matches visual mesh
         
-        // Direct physics approach - will add character controller later
+        // Prevent rotation on X and Z axes (character should stay upright)
+        LockedAxes::new().lock_rotation_x().lock_rotation_z(),
+        
+        // Physics properties for character movement
         LinearVelocity::default(),
+        Friction::new(0.7), // Ground friction for stopping
+        Restitution::new(0.0), // No bounce when hitting things
         
         // Game components
         crate::components::Player,
