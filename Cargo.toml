@@ -1,6 +1,73 @@
 [package]
 name = "eryndor"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+description = "A fantasy MMO built with Bevy and Rust"
+authors = ["Joe"]
 
 [dependencies]
+# Core game engine
+bevy = { version = "0.16", features = ["default"] }
+
+# Physics and collision detection
+bevy_rapier3d = "0.29"
+
+# Networking for multiplayer
+lightyear = "0.18"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+ron = "0.8"
+
+# Asset loading and management
+bevy_asset_loader = "0.21"
+
+# Random number generation
+rand = "0.8"
+
+# Date and time utilities
+chrono = { version = "0.4", features = ["serde"] }
+
+# Async runtime (for database and networking)
+tokio = { version = "1.0", features = ["full"] }
+
+# Database connectivity (SQLite for development, PostgreSQL for production)
+sqlx = { version = "0.8", features = ["sqlite", "postgres", "runtime-tokio-rustls", "chrono", "uuid"] }
+
+# UUID generation for entities
+uuid = { version = "1.0", features = ["v4", "serde"] }
+
+# Configuration management
+config = "0.14"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+[dev-dependencies]
+# Testing utilities
+bevy_dev_tools = "0.16"
+
+# Fast compiles configuration for development
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
+
+# Release profile optimizations
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+
+# Profile for WASM builds
+[profile.wasm-release]
+inherits = "release"
+opt-level = "s"
+lto = true
+codegen-units = 1
