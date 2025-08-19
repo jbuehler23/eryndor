@@ -6,8 +6,9 @@ description = "A fantasy MMO built with Bevy and Rust"
 authors = ["Joe"]
 
 [dependencies]
-# Core game engine
+# Core game engine with explicit GLTF support  
 bevy = { version = "0.16", features = ["default"] }
+bevy_animation = "0.16"
 
 # Physics and collision detection - Avian (future official Bevy physics)
 avian3d = "0.3"
@@ -70,6 +71,10 @@ codegen-units = 1
 panic = "abort"
 
 # Profile for WASM builds
+[[bin]]
+name = "gltf_inspector"
+path = "src/bin/gltf_inspector.rs"
+
 [profile.wasm-release]
 inherits = "release"
 opt-level = "s"

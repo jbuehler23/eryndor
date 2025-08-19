@@ -44,3 +44,36 @@ impl Default for PlayerStats {
         }
     }
 }
+
+/// Character type selection for different models
+/// Following Open/Closed: Easy to add new character types
+#[derive(Component, Clone, Copy, Debug, PartialEq)]
+pub enum CharacterType {
+    Knight,
+    Mage,
+    Rogue,
+    Barbarian,
+    RogueHooded,
+}
+
+impl Default for CharacterType {
+    fn default() -> Self {
+        CharacterType::Knight // Default to knight character
+    }
+}
+
+/// Component to track which character model is loaded
+#[derive(Component)]
+pub struct CharacterModel {
+    pub character_type: CharacterType,
+    pub model_entity: Option<Entity>, // Track the spawned model entity
+}
+
+impl Default for CharacterModel {
+    fn default() -> Self {
+        Self {
+            character_type: CharacterType::default(),
+            model_entity: None,
+        }
+    }
+}

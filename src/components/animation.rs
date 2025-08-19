@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_animation::graph::{AnimationGraph, AnimationNodeIndex};
 
 /// Animation state enum - defines different character animation states
 /// Following SOLID: Single responsibility for animation state management
@@ -29,6 +30,7 @@ pub struct AnimationController {
     pub velocity_threshold: f32,    // Velocity to trigger walking
     pub run_threshold: f32,         // Velocity to trigger running
     pub air_time_threshold: f32,    // Time in air before falling animation
+    pub state_just_changed: bool,   // Flag to track if state changed this frame
 }
 
 impl Default for AnimationController {
@@ -41,11 +43,12 @@ impl Default for AnimationController {
             velocity_threshold: 0.5,    // Kept for backward compatibility (unused)
             run_threshold: 8.0,         // Kept for backward compatibility (unused)  
             air_time_threshold: 0.2,    // 200ms before falling animation
+            state_just_changed: false,  // Initially no state change
         }
     }
 }
 
-/// Animation assets resource - holds references to animation clips
+/// Animation assets resource - holds references to animation clips and graphs
 /// Following DRY: Centralized animation asset management
 #[derive(Resource, Default)]
 pub struct AnimationAssets {
@@ -55,16 +58,44 @@ pub struct AnimationAssets {
     pub jump: Option<Handle<AnimationClip>>,
     pub fall: Option<Handle<AnimationClip>>,
     pub land: Option<Handle<AnimationClip>>,
+    // Animation graph and node indices for Bevy 0.16
+    pub animation_graph: Option<Handle<AnimationGraph>>,
+    pub idle_node: Option<AnimationNodeIndex>,
+    pub walk_node: Option<AnimationNodeIndex>, 
+    pub run_node: Option<AnimationNodeIndex>,
+    pub jump_node: Option<AnimationNodeIndex>,
+    pub fall_node: Option<AnimationNodeIndex>,
+    pub land_node: Option<AnimationNodeIndex>,
+}
+
+/// Knight animation setup component - tracks animation player entity and graph
+#[derive(Component)]
+pub struct KnightAnimationSetup {
+    pub animation_player_entity: Option<Entity>,
+    pub graph_handle: Option<Handle<AnimationGraph>>,
+    pub animation_nodes: [Option<AnimationNodeIndex>; 6], // idle, walk, run, jump, fall, land
+}
+
+impl Default for KnightAnimationSetup {
+    fn default() -> Self {
+        Self {
+            animation_player_entity: None,
+            graph_handle: None,
+            animation_nodes: [None; 6],
+        }
+    }
 }
 
 impl AnimationController {
     /// Update animation state based on input and physics
-    /// Following KISS: Input-driven for ground states, physics for air states
+    /// Following KISS: Input-driven for ground states, physics for air states, proper landing transitions
     pub fn update_state(&mut self, velocity: Vec3, is_grounded: bool, is_moving: bool, is_running: bool, is_jumping: bool, dt: f32) -> bool {
         let vertical_speed = velocity.y;
+        let was_grounded = matches!(self.current_state, AnimationState::Idle | AnimationState::Walking | AnimationState::Running | AnimationState::Landing);
         
-        // Determine new state based on input and physics
+        // Determine new state based on input, physics, and transitions
         let new_state = if !is_grounded {
+            // Airborne states
             if vertical_speed > 0.5 {
                 AnimationState::Jumping
             } else if self.state_timer > self.air_time_threshold {
@@ -73,9 +104,26 @@ impl AnimationController {
                 self.current_state // Keep current state briefly
             }
         } else {
-            // Grounded states - input-based for immediate response
-            if is_jumping {
-                AnimationState::Jumping  // Immediate jump response
+            // Just landed - transition through landing state if coming from air
+            if !was_grounded && matches!(self.current_state, AnimationState::Jumping | AnimationState::Falling) {
+                AnimationState::Landing
+            }
+            // Landing state auto-transitions after short duration (0.3s for landing animation)
+            else if self.current_state == AnimationState::Landing && self.state_timer > 0.3 {
+                // Transition to appropriate movement state after landing
+                if !is_moving {
+                    AnimationState::Idle
+                } else if is_running {
+                    AnimationState::Running
+                } else {
+                    AnimationState::Walking
+                }
+            }
+            // Normal grounded states - only allow jump if not in landing transition
+            else if is_jumping && self.current_state != AnimationState::Landing {
+                AnimationState::Jumping  // Immediate jump response (but not during landing)
+            } else if self.current_state == AnimationState::Landing {
+                self.current_state // Stay in landing until timer expires
             } else if !is_moving {
                 AnimationState::Idle
             } else if is_running {
@@ -91,8 +139,10 @@ impl AnimationController {
             self.previous_state = self.current_state;
             self.current_state = new_state;
             self.state_timer = 0.0;
+            self.state_just_changed = true;
         } else {
             self.state_timer += dt;
+            self.state_just_changed = false;
         }
         
         state_changed

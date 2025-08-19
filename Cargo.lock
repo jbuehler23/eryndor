@@ -3783,6 +3783,7 @@ dependencies = [
  "bevy 0.16.1",
  "bevy-tnua",
  "bevy-tnua-avian3d",
+ "bevy_animation",
  "bevy_asset_loader",
  "bevy_dev_tools",
  "chrono",

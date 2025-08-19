@@ -46,11 +46,13 @@ impl Plugin for EryndorPlugin {
                 handle_input,
                 move_player.after(handle_input),
                 update_animation_states.after(move_player),
+                setup_knight_animations_when_ready, // New system to setup animations when scene loads
                 play_animations.after(update_animation_states),
                 update_camera.after(move_player),
                 update_ui,
                 debug_animation_state.after(update_animation_states),
                 check_asset_loading,
+                upgrade_player_model.after(check_asset_loading),
                 update_config_system,
                 save_config_on_exit,
                 log_performance_metrics,

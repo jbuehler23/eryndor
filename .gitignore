@@ -8,16 +8,5 @@ ROADMAP.md
 phase*_implementation.md
 
 # KayKit Adventurers assets
-assets/KayKit_Adventurers_1.0_FREE/**/*.DS_Store
-assets/KayKit_Adventurers_1.0_FREE/**/*.png
-assets/KayKit_Adventurers_1.0_FREE/**/*.txt
-assets/KayKit_Adventurers_1.0_FREE/**/*.url
-assets/KayKit_Adventurers_1.0_FREE/**/*.fbx
-assets/KayKit_Adventurers_1.0_FREE/**/*.bin
-assets/KayKit_Adventurers_1.0_FREE/**/*.gltf
-assets/KayKit_Adventurers_1.0_FREE/**/*.glb
-
-# Samples and Textures
-assets/KayKit_Adventurers_1.0_FREE/Samples/*.png
-assets/KayKit_Adventurers_1.0_FREE/Textures/*.png
+assets/
 

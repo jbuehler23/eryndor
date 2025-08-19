@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use avian3d::prelude::*;
-use crate::components::{Player, AnimationController, AnimationAssets};
+use bevy_animation::graph::{AnimationGraph, AnimationGraphHandle};
+use bevy::gltf::GltfAssetLabel;
+use crate::components::{Player, AnimationController, AnimationAssets, KnightAnimationSetup};
 use crate::resources::InputResource;
 
 /// Animation system - updates character animation states based on input and physics
@@ -11,14 +13,14 @@ pub fn update_animation_states(
     mut animation_query: Query<(&mut AnimationController, &LinearVelocity), With<Player>>,
 ) {
     for (mut anim_controller, velocity) in animation_query.iter_mut() {
-        // Ground detection - simple physics check for now
-        let is_grounded = velocity.y.abs() < 1.0;
+        // Ground detection - improved threshold for proper landing detection
+        let is_grounded = velocity.y.abs() < 0.2; // Much more sensitive to landing
         
         // Determine input-based movement state
         let is_moving = input.forward || input.backward || input.left || input.right || 
                        (input.mouse_left_held && input.mouse_right_held); // WoW both-button forward
         let is_running = is_moving && input.up; // Shift key for running
-        let is_jumping = input.down; // Space key for jumping
+        let is_jumping = input.down; // Space key for jumping (now handled with landing logic)
         
         // Update animation state based on input and physics
         let state_changed = anim_controller.update_state(
@@ -40,49 +42,128 @@ pub fn update_animation_states(
     }
 }
 
-/// Animation asset loading system - loads animation clips for characters
-/// Following DRY: Centralized animation asset management
+/// Animation asset loading system - simplified to just store empty resource
+/// Following Bevy patterns: Animation graph created when scene loads
 pub fn setup_animation_assets(
     mut commands: Commands,
-    _asset_server: Res<AssetServer>,
 ) {
-    // Initialize animation assets resource
-    let animation_assets = AnimationAssets {
-        // TODO: Load actual animation files when we have character models
-        // For now, we'll set up the resource structure
-        idle: None, // Some(asset_server.load("animations/idle.gltf#Animation0")),
-        walk: None, // Some(asset_server.load("animations/walk.gltf#Animation0")),
-        run: None,  // Some(asset_server.load("animations/run.gltf#Animation0")),
-        jump: None, // Some(asset_server.load("animations/jump.gltf#Animation0")),
-        fall: None, // Some(asset_server.load("animations/fall.gltf#Animation0")),
-        land: None, // Some(asset_server.load("animations/land.gltf#Animation0")),
-    };
-    
+    // Initialize empty animation assets resource - will be populated when scene loads
+    let animation_assets = AnimationAssets::default();
     commands.insert_resource(animation_assets);
-    info!("Animation assets resource initialized");
+    info!("Animation assets resource initialized - waiting for scene to load");
 }
 
-/// Animation player system - plays animations based on current state
-/// Following Open/Closed: Easy to extend with new animation types
-pub fn play_animations(
-    _animation_assets: Res<AnimationAssets>,
-    animation_query: Query<
-        &AnimationController, 
-        (With<Player>, Changed<AnimationController>)
-    >,
+/// System to setup Knight animations when scene is ready
+/// Following Bevy patterns from animated_mesh.rs example
+pub fn setup_knight_animations_when_ready(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut animation_graphs: ResMut<Assets<AnimationGraph>>,
+    _children: Query<&Children>,
+    mut players: Query<(Entity, &mut AnimationPlayer), Added<AnimationPlayer>>,
+    mut knight_setup_query: Query<&mut KnightAnimationSetup, With<Player>>,
 ) {
-    for anim_controller in animation_query.iter() {
-        // TODO: Implement actual animation playing once we have character models
-        // For now, just log the state changes for debugging
-        debug!(
-            "Animation state: {:?}", 
-            anim_controller.current_state
-        );
-        
-        // The animation system will be completed in a future phase when we add:
-        // - Character models with animation rigs
-        // - Animation clips loaded from assets
-        // - AnimationPlayer components on entities
+    // Check if we have a newly added AnimationPlayer (from GLTF scene loading)
+    for (animation_player_entity, mut animation_player) in players.iter_mut() {
+        // Find the player entity with KnightAnimationSetup
+        if let Ok(mut knight_setup) = knight_setup_query.single_mut() {
+            if knight_setup.graph_handle.is_none() {
+                // Create animation graph with Knight animations - fix order to match actual node indices
+                let (graph, animation_nodes) = AnimationGraph::from_clips([
+                    asset_server.load(GltfAssetLabel::Animation(72).from_asset("KayKit_Adventurers_1.0_FREE/Characters/gltf/Knight.glb")), // Walking_A (will be NodeIndex(0))
+                    asset_server.load(GltfAssetLabel::Animation(36).from_asset("KayKit_Adventurers_1.0_FREE/Characters/gltf/Knight.glb")), // Idle (will be NodeIndex(1))  
+                    asset_server.load(GltfAssetLabel::Animation(48).from_asset("KayKit_Adventurers_1.0_FREE/Characters/gltf/Knight.glb")), // Running_A (will be NodeIndex(2))
+                    asset_server.load(GltfAssetLabel::Animation(42).from_asset("KayKit_Adventurers_1.0_FREE/Characters/gltf/Knight.glb")), // Jump_Start (will be NodeIndex(3))
+                    asset_server.load(GltfAssetLabel::Animation(40).from_asset("KayKit_Adventurers_1.0_FREE/Characters/gltf/Knight.glb")), // Jump_Idle/fall (will be NodeIndex(4))
+                    asset_server.load(GltfAssetLabel::Animation(41).from_asset("KayKit_Adventurers_1.0_FREE/Characters/gltf/Knight.glb")), // Jump_Land (will be NodeIndex(5))
+                ]);
+                
+                let graph_handle = animation_graphs.add(graph);
+                
+                // Store animation setup
+                knight_setup.graph_handle = Some(graph_handle.clone());
+                knight_setup.animation_nodes = [
+                    Some(animation_nodes[1]), // idle (now at index 1 in clips array)
+                    Some(animation_nodes[0]), // walk (now at index 0 in clips array)
+                    Some(animation_nodes[2]), // run (still at index 2)
+                    Some(animation_nodes[3]), // jump (still at index 3) 
+                    Some(animation_nodes[4]), // fall (still at index 4)
+                    Some(animation_nodes[5]), // land (still at index 5)
+                ];
+                
+                // Debug: Log the actual animation node indices (after reordering)
+                info!("Animation node mapping created (reordered):");
+                info!("  Walk (clips[0]): {:?}", animation_nodes[0]);
+                info!("  Idle (clips[1]): {:?}", animation_nodes[1]);
+                info!("  Run (clips[2]): {:?}", animation_nodes[2]);
+                info!("  Jump (clips[3]): {:?}", animation_nodes[3]);
+                info!("  Fall (clips[4]): {:?}", animation_nodes[4]);
+                info!("  Land (clips[5]): {:?}", animation_nodes[5]);
+                
+                // Store the entity with the AnimationPlayer
+                knight_setup.animation_player_entity = Some(animation_player_entity);
+                
+                // Add the animation graph to the entity with the AnimationPlayer
+                commands.entity(animation_player_entity)
+                    .insert(AnimationGraphHandle(graph_handle));
+                
+                // Start with idle animation - now at index 1 in clips array
+                info!("Starting with initial idle animation: {:?}", animation_nodes[1]);
+                animation_player.play(animation_nodes[1]).repeat();
+                
+                info!("Knight animations setup complete with 6 animation nodes!");
+            }
+        }
+    }
+}
+
+/// Animation player system - plays Knight animations based on current state
+/// Following corrected Bevy pattern: target the entity with AnimationPlayer
+pub fn play_animations(
+    mut knight_setup_query: Query<(&AnimationController, &KnightAnimationSetup), With<Player>>,
+    mut animation_players: Query<&mut AnimationPlayer>,
+) {
+    for (anim_controller, knight_setup) in knight_setup_query.iter_mut() {
+        // Only proceed if we have the animation player entity set up
+        if let (Some(animation_player_entity), Some(_)) = (knight_setup.animation_player_entity, &knight_setup.graph_handle) {
+            if let Ok(mut animation_player) = animation_players.get_mut(animation_player_entity) {
+                // Only change animation if state just changed this frame
+                if anim_controller.state_just_changed {
+                    // Get the animation node index for current state
+                    let (node_index, should_repeat) = match anim_controller.current_state {
+                        crate::components::AnimationState::Idle => (knight_setup.animation_nodes[0], true),
+                        crate::components::AnimationState::Walking => (knight_setup.animation_nodes[1], true),
+                        crate::components::AnimationState::Running => (knight_setup.animation_nodes[2], true),
+                        crate::components::AnimationState::Jumping => (knight_setup.animation_nodes[3], false),
+                        crate::components::AnimationState::Falling => (knight_setup.animation_nodes[4], true),
+                        crate::components::AnimationState::Landing => (knight_setup.animation_nodes[5], false),
+                    };
+                    
+                    // Play the animation if we have the node
+                    if let Some(node_index) = node_index {
+                        // Use play_and_fade for smooth transitions
+                        animation_player.stop_all();
+                        let mut animation = animation_player.play(node_index);
+
+                        if should_repeat {
+                            animation.repeat();
+                        }
+
+                        info!(
+                            "Playing Knight animation node {:?} for state {:?} (repeat: {})", 
+                            node_index, 
+                            anim_controller.current_state,
+                            should_repeat
+                        );
+                    } else {
+                        warn!(
+                            "No animation node loaded for state {:?}", 
+                            anim_controller.current_state
+                        );
+                    }
+                }
+            }
+        }
     }
 }
 

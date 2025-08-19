@@ -53,19 +53,20 @@ pub fn setup_camera(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    // Spawn the player entity with physics
+    // Spawn the player entity with physics - initially with fallback capsule
     commands.spawn((
-        // Visual representation - simple capsule for now
+        // Visual representation - Start with fallback, will be replaced when assets load
         Mesh3d(meshes.add(Capsule3d::new(0.5, 1.8))),
         MeshMaterial3d(materials.add(StandardMaterial {
-            base_color: Color::srgb(0.2, 0.4, 0.8), // Blue player
+            base_color: Color::srgb(0.2, 0.4, 0.8), // Blue player fallback
             ..default()
         })),
+        
         Transform::from_xyz(0.0, 2.0, 0.0), // Start above ground to let physics settle
         
         // Physics components - Avian 3D
         RigidBody::Dynamic, // Dynamic for gravity and realistic physics
-        Collider::capsule(1.8, 0.5), // Height, radius - matches visual mesh
+        Collider::capsule(1.8, 0.5), // Height, radius - consistent collision regardless of visual
         
         // Prevent rotation on X and Z axes (character should stay upright)
         LockedAxes::new().lock_rotation_x().lock_rotation_z(),
@@ -80,7 +81,11 @@ pub fn setup_camera(
         crate::components::PlayerMovementConfig::default(),
         crate::components::PlayerStats::default(),
         crate::components::AnimationController::default(),
+        crate::components::CharacterModel::default(), // Track character model type
+        crate::components::KnightAnimationSetup::default(), // Track animation setup
     ));
+    
+    info!("Player spawned with fallback capsule - will upgrade to 3D model when assets load");
 
     // Spawn the camera positioned behind and above the player
     commands.spawn((
