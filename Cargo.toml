@@ -7,7 +7,7 @@ authors = ["Joe"]
 
 [dependencies]
 # Core game engine with explicit GLTF support  
-bevy = { version = "0.16", features = ["default"] }
+bevy = { version = "0.16", features = ["default", "bevy_gltf"] }
 bevy_animation = "0.16"
 
 # Physics and collision detection - Avian (future official Bevy physics)

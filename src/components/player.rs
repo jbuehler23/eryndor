@@ -14,6 +14,16 @@ pub struct PlayerMovementConfig {
     pub jump_height: f32,
     pub acceleration: f32,
     pub air_acceleration: f32,
+    pub deceleration: f32,
+}
+
+/// Component to track current movement state for smooth acceleration/deceleration
+#[derive(Component)]
+pub struct PlayerMovementState {
+    pub current_speed: f32,          // Current movement speed
+    pub target_speed: f32,           // Target speed to accelerate/decelerate towards
+    pub current_direction: Vec3,     // Current movement direction (normalized)
+    pub target_direction: Vec3,      // Target movement direction (normalized)
 }
 
 impl Default for PlayerMovementConfig {
@@ -22,8 +32,20 @@ impl Default for PlayerMovementConfig {
             walk_speed: 8.0,
             run_speed: 12.0,
             jump_height: 4.0,
-            acceleration: 40.0,
-            air_acceleration: 20.0,
+            acceleration: 40.0,        // Units per second squared for acceleration
+            air_acceleration: 20.0,    // Reduced acceleration in air
+            deceleration: 35.0,        // Slightly faster deceleration for responsive feel
+        }
+    }
+}
+
+impl Default for PlayerMovementState {
+    fn default() -> Self {
+        Self {
+            current_speed: 0.0,
+            target_speed: 0.0,
+            current_direction: Vec3::ZERO,
+            target_direction: Vec3::ZERO,
         }
     }
 }

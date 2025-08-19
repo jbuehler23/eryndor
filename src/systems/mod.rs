@@ -6,6 +6,10 @@ pub mod config;
 pub mod logging;
 pub mod player;
 pub mod animation;
+pub mod terrain;
+pub mod world_objects;
+pub mod biomes;
+pub mod collision_debug;
 
 pub use camera::*;
 pub use input::*;
@@ -15,3 +19,7 @@ pub use config::*;
 pub use logging::*;
 pub use player::*;
 pub use animation::*;
+pub use terrain::*;
+pub use world_objects::*;
+pub use biomes::*;
+pub use collision_debug::*;

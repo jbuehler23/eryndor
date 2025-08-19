@@ -143,7 +143,7 @@ pub fn play_animations(
                     if let Some(node_index) = node_index {
                         // Use play_and_fade for smooth transitions
                         animation_player.stop_all();
-                        let mut animation = animation_player.play(node_index);
+                        let animation = animation_player.play(node_index);
 
                         if should_repeat {
                             animation.repeat();

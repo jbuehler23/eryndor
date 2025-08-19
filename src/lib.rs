@@ -23,6 +23,7 @@ impl Plugin for EryndorPlugin {
         app
             // Physics - Avian 3D integration
             .add_plugins(PhysicsPlugins::default())
+            .add_plugins(avian3d::debug_render::PhysicsDebugPlugin::default()) // Enable collision shape visualization
             .insert_resource(Gravity(Vec3::NEG_Y * 9.81)) // Earth-like gravity
             
             // Character controller - Direct Avian physics for now
@@ -31,6 +32,7 @@ impl Plugin for EryndorPlugin {
             // Resources - Global state
             .insert_resource(load_config())
             .init_resource::<InputResource>()
+            .init_resource::<CollisionDebugConfig>() // Debug collision interaction
             
             // States - Game flow control
             .init_state::<GameState>()
@@ -41,9 +43,13 @@ impl Plugin for EryndorPlugin {
                 setup_ui,
                 load_initial_assets,
                 setup_animation_assets,
+                setup_terrain, // Generate world terrain
+                setup_biomes.after(setup_terrain), // Initialize biome zones after terrain
+                load_world_object_assets, // Load forest/nature assets
             ))
             .add_systems(Update, (
                 handle_input,
+                toggle_collision_debug, // F3 to toggle collision debug
                 move_player.after(handle_input),
                 update_animation_states.after(move_player),
                 setup_knight_animations_when_ready, // New system to setup animations when scene loads
@@ -51,14 +57,19 @@ impl Plugin for EryndorPlugin {
                 update_camera.after(move_player),
                 update_ui,
                 debug_animation_state.after(update_animation_states),
+                debug_player_collision.after(move_player), // Debug player-terrain collision
                 check_asset_loading,
                 upgrade_player_model.after(check_asset_loading),
+                spawn_world_objects.after(load_world_object_assets).after(setup_biomes), // Spawn world objects when assets loaded and biomes ready
                 update_config_system,
                 save_config_on_exit,
                 log_performance_metrics,
             ))
             // Debug systems - Only in debug builds
-            .add_systems(Update, debug_info.run_if(in_state(GameState::Debug)));
+            .add_systems(Update, (
+                debug_info,
+                debug_biome_visualization, // Show biome zones as colored circles
+            ).run_if(in_state(GameState::Debug)));
     }
 }
 

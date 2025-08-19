@@ -54,7 +54,7 @@ pub fn setup_camera(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // Spawn the player entity with physics - initially with fallback capsule
-    commands.spawn((
+    let player_entity = commands.spawn((
         // Visual representation - Start with fallback, will be replaced when assets load
         Mesh3d(meshes.add(Capsule3d::new(0.5, 1.8))),
         MeshMaterial3d(materials.add(StandardMaterial {
@@ -62,11 +62,11 @@ pub fn setup_camera(
             ..default()
         })),
         
-        Transform::from_xyz(0.0, 2.0, 0.0), // Start above ground to let physics settle
+        Transform::from_xyz(0.0, 5.0, 0.0), // Start high above terrain to let physics settle
         
         // Physics components - Avian 3D
         RigidBody::Dynamic, // Dynamic for gravity and realistic physics
-        Collider::capsule(1.8, 0.5), // Height, radius - consistent collision regardless of visual
+        Collider::capsule(0.5, 1.8), // Radius, height - proper human-sized collider
         
         // Prevent rotation on X and Z axes (character should stay upright)
         LockedAxes::new().lock_rotation_x().lock_rotation_z(),
@@ -75,10 +75,13 @@ pub fn setup_camera(
         LinearVelocity::default(),
         Friction::new(0.7), // Ground friction for stopping
         Restitution::new(0.0), // No bounce when hitting things
-        
-        // Game components
+    )).id();
+    
+    // Add game components separately to avoid bundle size limits
+    commands.entity(player_entity).insert((
         crate::components::Player,
         crate::components::PlayerMovementConfig::default(),
+        crate::components::PlayerMovementState::default(), // Smooth movement state tracking
         crate::components::PlayerStats::default(),
         crate::components::AnimationController::default(),
         crate::components::CharacterModel::default(), // Track character model type
@@ -95,19 +98,7 @@ pub fn setup_camera(
         GameCamera::default(),
     ));
 
-    // Create a ground plane with physics - Basic 3D scene
-    commands.spawn((
-        Mesh3d(meshes.add(Plane3d::default().mesh().size(50.0, 50.0))),
-        MeshMaterial3d(materials.add(StandardMaterial {
-            base_color: Color::srgb(0.3, 0.5, 0.3), // Green ground
-            ..default()
-        })),
-        Transform::from_xyz(0.0, 0.0, 0.0),
-        
-        // Physics for ground collision
-        RigidBody::Static, // Static body for immovable ground
-        Collider::cuboid(25.0, 0.1, 25.0), // Match ground plane size
-    ));
+    // Note: Ground collision is now provided by the terrain mesh system
 
     // Add a simple cube for reference with physics
     commands.spawn((
