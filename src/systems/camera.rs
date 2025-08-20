@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use avian3d::prelude::*;
 use crate::resources::{GameConfig, InputResource};
 
 // Camera component - Single responsibility with spherical coordinates
@@ -48,76 +47,25 @@ impl Default for GameCamera {
 }
 
 // Camera setup system
-pub fn setup_camera(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    // Spawn the player entity with physics - initially with fallback capsule
-    let player_entity = commands.spawn((
-        // Visual representation - Start with fallback, will be replaced when assets load
-        Mesh3d(meshes.add(Capsule3d::new(0.5, 1.8))),
-        MeshMaterial3d(materials.add(StandardMaterial {
-            base_color: Color::srgb(0.2, 0.4, 0.8), // Blue player fallback
-            ..default()
-        })),
-        
-        Transform::from_xyz(0.0, 5.0, 0.0), // Start high above terrain to let physics settle
-        
-        // Physics components - Avian 3D
-        RigidBody::Dynamic, // Dynamic for gravity and realistic physics
-        // Capsule collider positioned so bottom aligns with feet
-        Collider::capsule(0.5, 0.5),
-        ColliderTransform {
-            translation: Vec3::Y, // Lift collider so bottom = feet level
-            rotation: Rotation(Quat::IDENTITY),
-            scale: Vec3::ONE,
-        },
-        
-        // Prevent rotation on X and Z axes (character should stay upright)
-        LockedAxes::new().lock_rotation_x().lock_rotation_z(),
-        
-        // Physics properties for character movement
-        LinearVelocity::default(),
-        Friction::new(0.7), // Ground friction for stopping
-        Restitution::new(0.0), // No bounce when hitting things
-    )).id();
+pub fn setup_camera(mut commands: Commands) {
+    // Calculate initial camera position using spherical coordinates to match dynamic system
+    let player_spawn = Vec3::new(-70.0, 15.0, -70.0);
+    let camera_defaults = GameCamera::default();
     
-    // Add game components separately to avoid bundle size limits
-    commands.entity(player_entity).insert((
-        crate::components::Player,
-        crate::components::PlayerMovementConfig::default(),
-        crate::components::PlayerMovementState::default(), // Smooth movement state tracking
-        crate::components::PlayerStats::default(),
-        crate::components::AnimationController::default(),
-        crate::components::CharacterModel::default(), // Track character model type
-        crate::components::KnightAnimationSetup::default(), // Track animation setup
-    ));
+    // Calculate camera offset using same spherical coordinate math as update_camera
+    let camera_offset = Vec3::new(
+        camera_defaults.distance * camera_defaults.pitch.cos() * camera_defaults.yaw.sin(),
+        camera_defaults.distance * camera_defaults.pitch.sin(),
+        camera_defaults.distance * camera_defaults.pitch.cos() * camera_defaults.yaw.cos(),
+    );
     
-    info!("Player spawned with fallback capsule - will upgrade to 3D model when assets load");
-
-    // Spawn the camera positioned behind and above the player
+    let target_pos = player_spawn + Vec3::new(0.0, 1.5, 0.0); // Same head height as update_camera
+    let initial_camera_pos = target_pos + camera_offset;
+    
     commands.spawn((
         Camera3d::default(),
-        Transform::from_xyz(0.0, 8.0, 12.0)
-            .looking_at(Vec3::new(0.0, 2.0, 0.0), Vec3::Y), // Look at player height
-        GameCamera::default(),
-    ));
-
-    // Note: Ground collision is now provided by the terrain mesh system
-
-    // Add a simple cube for reference with physics
-    commands.spawn((
-        Mesh3d(meshes.add(Cuboid::new(2.0, 2.0, 2.0))),
-        MeshMaterial3d(materials.add(StandardMaterial {
-            base_color: Color::srgb(0.8, 0.7, 0.6),
-            ..default()
-        })),
-        Transform::from_xyz(5.0, 2.0, 0.0), // Move it to the side so player doesn't spawn inside
-        
-        // Physics for the cube
-        RigidBody::Static, // Static reference object
-        Collider::cuboid(1.0, 1.0, 1.0), // Match visual size
+        Transform::from_translation(initial_camera_pos).looking_at(target_pos, Vec3::Y),
+        camera_defaults,
     ));
 
     // Add a light source
@@ -177,7 +125,7 @@ pub fn update_camera(
     
     // Handle zoom with mouse wheel
     if input.scroll_delta != 0.0 {
-        camera.distance -= input.scroll_delta * camera.zoom_speed * time.delta_secs();
+        camera.distance -= input.scroll_delta * camera.zoom_speed;
         camera.distance = camera.distance.clamp(camera.min_distance, camera.max_distance);
     }
     
@@ -192,10 +140,12 @@ pub fn update_camera(
     let target_pos = player_pos + Vec3::new(0.0, 1.5, 0.0); // Look at player's head height
     let desired_camera_pos = target_pos + camera_offset;
     
-    // Smoothly move camera to desired position
+    
+    // Smoothly move camera to desired position - use clamped lerp factor to prevent feedback loops
+    let lerp_factor = (camera.follow_speed * time.delta_secs()).clamp(0.0, 1.0);
     camera_transform.translation = camera_transform.translation.lerp(
         desired_camera_pos, 
-        camera.follow_speed * time.delta_secs()
+        lerp_factor
     );
     
     // Always look at player

@@ -36,7 +36,8 @@ impl Default for TerrainConfig {
 }
 
 /// Generate terrain mesh with height-based noise for rolling hills
-pub fn generate_terrain_mesh(config: &TerrainConfig) -> Mesh {
+/// Returns both the visual mesh and collision data (vertices, triangles)
+pub fn generate_terrain_mesh(config: &TerrainConfig) -> (Mesh, Vec<Vec3>, Vec<[u32; 3]>) {
     let resolution = config.resolution;
     let size = config.size;
     let height_scale = config.height_scale;
@@ -87,6 +88,17 @@ pub fn generate_terrain_mesh(config: &TerrainConfig) -> Mesh {
     // Calculate proper normals for lighting
     calculate_normals(&mut normals, &positions, &indices, resolution);
     
+    // Convert positions to Vec3 for collision
+    let collision_vertices: Vec<Vec3> = positions.iter()
+        .map(|pos| Vec3::new(pos[0], pos[1], pos[2]))
+        .collect();
+    
+    // Convert flat indices to triangle array format for Avian collision
+    let collision_triangles: Vec<[u32; 3]> = indices
+        .chunks(3)
+        .map(|chunk| [chunk[0], chunk[1], chunk[2]])
+        .collect();
+    
     // Create Bevy mesh
     let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, default());
     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
@@ -94,7 +106,7 @@ pub fn generate_terrain_mesh(config: &TerrainConfig) -> Mesh {
     mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
     mesh.insert_indices(Indices::U32(indices));
     
-    mesh
+    (mesh, collision_vertices, collision_triangles)
 }
 
 /// Generate heightfield data for Avian physics collider
@@ -183,8 +195,11 @@ pub fn setup_terrain(
 ) {
     let config = TerrainConfig::default();
     
-    // Generate terrain mesh
-    let terrain_mesh = generate_terrain_mesh(&config);
+    // Generate terrain mesh and collision data
+    let (terrain_mesh, collision_vertices, collision_triangles) = generate_terrain_mesh(&config);
+    
+    // Store triangle count before move
+    let triangle_count = collision_triangles.len();
     
     // Create basic grass-like material
     let terrain_material = StandardMaterial {
@@ -194,8 +209,6 @@ pub fn setup_terrain(
         ..default()
     };
     
-    // Create heightfield collider data for better dynamic rigidbody collision
-    let heights = generate_heightfield_data(&config);
     
     // Spawn terrain entity with physics collision
     commands.spawn((
@@ -203,28 +216,17 @@ pub fn setup_terrain(
         MeshMaterial3d(materials.add(terrain_material)),
         Transform::from_xyz(0.0, 0.0, 0.0),
         
-        // Physics components - DISABLED heightfield for debugging
-        // RigidBody::Static,
-        // Collider::heightfield(heights, Vec3::new(config.size, 1.0, config.size)),
-        // CollisionMargin(0.01), // Smaller margin for heightfield
-        ColliderConstructorHierarchy::new(ColliderConstructor::ConvexHullFromMesh),
+        // Physics components - Direct trimesh collision from mesh data
+        RigidBody::Static, // Static rigidbody for terrain
+        Collider::trimesh(collision_vertices, collision_triangles),
+        CollisionMargin(0.01), // Collision margin for trimesh stability
         // Game components
         Terrain,
         config.clone(),
     ));
     
-    // DEBUG: Add simple flat ground plane to test basic collision
-    commands.spawn((
-        Mesh3d(meshes.add(Plane3d::default().mesh().size(200.0, 200.0))),
-        MeshMaterial3d(materials.add(StandardMaterial {
-            base_color: Color::srgb(0.8, 0.8, 0.8), // Gray ground
-            ..default()
-        })),
-        Transform::from_xyz(0.0, 0.0, 0.0), // At ground level
-        
-        RigidBody::Static,
-        Collider::cuboid(100.0, 0.1, 100.0), // Thin flat ground collision
-    ));
+    // Terrain collision now working with direct trimesh approach!
+    // Debug flat ground plane removed since terrain collision is successful
     
     // Create and insert height sampler resource for runtime queries
     let height_sampler = TerrainHeightSampler {
@@ -232,11 +234,12 @@ pub fn setup_terrain(
     };
     commands.insert_resource(height_sampler);
     
-    info!("🌍 Terrain generated: {}x{} units with {} vertices at Y=0", 
+    
+    info!("🌍 Terrain generated: {}x{} units with {} vertices", 
           config.size, config.size, config.resolution * config.resolution);
     info!("🌍 Terrain height range: -{} to +{} units", config.height_scale, config.height_scale);
+    info!("🌍 Terrain collision: Direct trimesh with {} triangles", triangle_count);
     info!("🌍 Terrain height sampler initialized for runtime queries");
-    info!("🔍 DEBUG: Added red box collider at Y=-1.0 for collision testing");
 }
 
 /// Sample terrain height at given world coordinates

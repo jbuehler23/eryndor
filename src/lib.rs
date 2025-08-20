@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use avian3d::prelude::*;
-// use bevy_tnua::prelude::*;
-// use bevy_tnua_avian3d::*;
+use bevy_tnua::prelude::*;
+use bevy_tnua_avian3d::*;
 
 pub mod systems;
 pub mod components;
@@ -26,8 +26,9 @@ impl Plugin for EryndorPlugin {
             .add_plugins(avian3d::debug_render::PhysicsDebugPlugin::default()) // Enable collision shape visualization
             .insert_resource(Gravity(Vec3::NEG_Y * 9.81)) // Earth-like gravity
             
-            // Character controller - Direct Avian physics for now
-            // TODO: Add Tnua integration once API is clarified
+            // Character controller - Tnua integration for professional movement
+            .add_plugins(TnuaControllerPlugin::new(FixedUpdate))
+            .add_plugins(TnuaAvian3dPlugin::new(FixedUpdate))
             
             // Resources - Global state
             .insert_resource(load_config())
@@ -39,7 +40,8 @@ impl Plugin for EryndorPlugin {
             
             // Core systems - Order matters for dependencies
             .add_systems(Startup, (
-                setup_camera,
+                setup_player, // Spawn player entity first
+                setup_camera, // Then setup camera to look at player
                 setup_ui,
                 load_initial_assets,
                 setup_animation_assets,
@@ -50,14 +52,14 @@ impl Plugin for EryndorPlugin {
             .add_systems(Update, (
                 handle_input,
                 toggle_collision_debug, // F3 to toggle collision debug
-                move_player.after(handle_input),
-                update_animation_states.after(move_player),
+                tnua_player_controls.after(handle_input).in_set(TnuaUserControlsSystemSet),
+                update_animation_states.after(tnua_player_controls),
                 setup_knight_animations_when_ready, // New system to setup animations when scene loads
                 play_animations.after(update_animation_states),
-                update_camera.after(move_player),
+                update_camera.after(tnua_player_controls),
                 update_ui,
                 debug_animation_state.after(update_animation_states),
-                debug_player_collision.after(move_player), // Debug player-terrain collision
+                debug_player_collision.after(tnua_player_controls), // Debug player-terrain collision
                 check_asset_loading,
                 upgrade_player_model.after(check_asset_loading),
                 spawn_world_objects.after(load_world_object_assets).after(setup_biomes), // Spawn world objects when assets loaded and biomes ready

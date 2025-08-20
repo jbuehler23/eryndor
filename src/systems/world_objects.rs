@@ -72,10 +72,10 @@ pub struct WorldObjectConfig {
 impl Default for WorldObjectConfig {
     fn default() -> Self {
         Self {
-            tree_density: 2.0,    // 2 trees per 100 units = sparse forest
-            rock_density: 1.5,    // 1.5 rocks per 100 units
-            bush_density: 3.0,    // 3 bushes per 100 units
-            grass_density: 5.0,   // 5 grass clumps per 100 units
+            tree_density: 0.2,    // 0.2 trees per 100 units = very sparse for performance
+            rock_density: 0.15,   // 0.15 rocks per 100 units = minimal rocks
+            bush_density: 0.3,    // 0.3 bushes per 100 units = minimal bushes  
+            grass_density: 0.5,   // 0.5 grass clumps per 100 units = minimal grass
             spawn_radius: 100.0,  // 100 unit radius from center
             min_spacing: 3.0,     // 3 units minimum spacing
         }
@@ -521,7 +521,7 @@ fn spawn_bush(
         
         // Physics - smaller collision for bushes (easier navigation)
         RigidBody::Static,
-        ColliderConstructorHierarchy::new(ColliderConstructor::ConvexHullFromMesh),
+        ColliderConstructorHierarchy::new(ColliderConstructor::TrimeshFromMesh),
 
         // Game components
         WorldObject,

@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy::asset::LoadState;
 use bevy::gltf::GltfAssetLabel;
+use avian3d::prelude::*;
 use crate::components::{Player, CharacterModel, CharacterType};
 
 // Asset loading resource to track loaded assets
@@ -88,13 +89,18 @@ pub fn upgrade_player_model(
     for (player_entity, mut character_model) in player_query.iter_mut() {
         // Check if the knight model is loaded
         if matches!(asset_server.load_state(&character_assets.knight), LoadState::Loaded) {
-            // Remove the capsule mesh components
+            // Remove the capsule mesh components and manual collider
             commands.entity(player_entity)
                 .remove::<Mesh3d>()
-                .remove::<MeshMaterial3d<StandardMaterial>>();
+                .remove::<MeshMaterial3d<StandardMaterial>>()
+                .remove::<Collider>(); // Remove manual capsule collider
                 
-            // Add the 3D character model - this will trigger scene loading and AnimationPlayer creation
-            commands.entity(player_entity).insert(SceneRoot(character_assets.knight.clone()));
+            // Add the 3D character model with manual collider (more reliable for character controller)
+            commands.entity(player_entity).insert((
+                SceneRoot(character_assets.knight.clone()),
+                // Manual character collider - more reliable than GLTF mesh generation for player movement
+                Collider::capsule(0.4, 1.8), // Character capsule: radius=0.4, height=1.8
+            ));
             
             // Update character model tracking
             character_model.character_type = CharacterType::Knight;
