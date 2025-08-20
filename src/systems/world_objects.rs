@@ -180,7 +180,7 @@ pub fn load_world_object_assets(
 ) {
     let mut world_assets = WorldObjectAssets::default();
     
-    info!("🌲 Loading KayKit Forest Nature Pack assets...");
+    info!("Loading KayKit Forest Nature Pack assets...");
     
     // Load tree assets using correct GLTF syntax
     for tree_type in TreeType::get_all_types() {
@@ -210,7 +210,7 @@ pub fn load_world_object_assets(
     commands.insert_resource(WorldObjectConfig::default());
     commands.insert_resource(WorldObjectsSpawned::default());
     
-    info!("🌲 World object assets loading started - {} trees, {} rocks, {} bushes", 
+    info!("World object assets loading started - {} trees, {} rocks, {} bushes", 
           TreeType::get_all_types().len(), 
           RockType::get_common_types().len(), 
           BushType::get_common_types().len());
@@ -262,7 +262,7 @@ pub fn spawn_world_objects(
         return; // Wait for multiple assets to load
     }
     
-    info!("🌲 World objects spawn ready - {}/{} trees loaded, beginning spawn...", 
+    info!("World objects spawn ready - {}/{} trees loaded, beginning spawn...", 
           loaded_trees, world_assets.trees.len());
     
     let mut rng = thread_rng();
@@ -312,9 +312,9 @@ pub fn spawn_world_objects(
         }
     }
     
-    info!("🌲 World objects spawned successfully: {} trees, {} rocks, {} bushes in {}m radius", 
+    info!("World objects spawned successfully: {} trees, {} rocks, {} bushes in {}m radius", 
           actual_trees, actual_rocks, actual_bushes, config.spawn_radius);
-    info!("🌍 Biome system applied - object distribution varies by forest/plains/rocky zones");
+    info!("Biome system applied - object distribution varies by forest/plains/rocky zones");
     
     // Mark as spawned so we don't spawn again
     spawned.0 = true;

@@ -235,11 +235,11 @@ pub fn setup_terrain(
     commands.insert_resource(height_sampler);
     
     
-    info!("🌍 Terrain generated: {}x{} units with {} vertices", 
+    info!("Terrain generated: {}x{} units with {} vertices", 
           config.size, config.size, config.resolution * config.resolution);
-    info!("🌍 Terrain height range: -{} to +{} units", config.height_scale, config.height_scale);
-    info!("🌍 Terrain collision: Direct trimesh with {} triangles", triangle_count);
-    info!("🌍 Terrain height sampler initialized for runtime queries");
+    info!("Terrain height range: -{} to +{} units", config.height_scale, config.height_scale);
+    info!("Terrain collision: Direct trimesh with {} triangles", triangle_count);
+    info!("Terrain height sampler initialized for runtime queries");
 }
 
 /// Sample terrain height at given world coordinates

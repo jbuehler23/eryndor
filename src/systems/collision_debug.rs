@@ -63,7 +63,7 @@ pub fn debug_player_collision(
     let is_falling = velocity.y < -0.1;
     let is_rising = velocity.y > 0.1;
     
-    info!("🔍 COLLISION DEBUG:");
+    info!("COLLISION DEBUG:");
     info!("   Player Entity: {:?}", entity);
     info!("   Player Pos: ({:.2}, {:.2}, {:.2})", player_pos.x, player_pos.y, player_pos.z);
     info!("   Terrain Height: {:.2}", terrain_height);
@@ -83,14 +83,14 @@ pub fn debug_player_collision(
     
     // Flag potential issues
     if height_diff > 1.0 {
-        warn!("⚠️  Player is floating {:.2} units above ground!", height_diff);
+        warn!("Player is floating {:.2} units above ground!", height_diff);
     } else if height_diff < -0.5 {
-        warn!("⚠️  Player is {:.2} units below ground surface!", height_diff.abs());
+        warn!("Player is {:.2} units below ground surface!", height_diff.abs());
     }
     
     // Check for bouncing behavior
     if velocity.y.abs() > 5.0 {
-        warn!("⚠️  High vertical velocity detected: {:.2} - possible bouncing!", velocity.y);
+        warn!("High vertical velocity detected: {:.2} - possible bouncing!", velocity.y);
     }
 }
 
@@ -101,6 +101,6 @@ pub fn toggle_collision_debug(
 ) {
     if keys.just_pressed(KeyCode::F3) {
         debug_config.enabled = !debug_config.enabled;
-        info!("🔍 Collision debug {}", if debug_config.enabled { "ENABLED" } else { "DISABLED" });
+        info!("Collision debug {}", if debug_config.enabled { "ENABLED" } else { "DISABLED" });
     }
 }

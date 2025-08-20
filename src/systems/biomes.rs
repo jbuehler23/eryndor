@@ -102,7 +102,7 @@ pub fn setup_biomes(
     
     commands.insert_resource(biome_system);
     
-    info!("🌍 Biome system initialized: {} forest, {} plains, {} rocky zones", 
+    info!("Biome system initialized: {} forest, {} plains, {} rocky zones", 
           3, 2, 3);
 }
 
