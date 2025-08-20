@@ -394,15 +394,24 @@ fn find_valid_spawn_position_with_biome(
             continue;
         }
         
-        // Sample actual terrain height at this position
-        let terrain_height = sample_terrain_height_with_variation(
+        // Sample actual terrain height at this position with reduced variation
+        let base_terrain_height = sample_terrain_height_with_variation(
             terrain_sampler,
             x,
             z,
-            rng.gen_range(-0.2..0.2) // Small random height variation
+            rng.gen_range(-0.1..0.1) // Reduced random height variation for better placement
         );
         
-        let position = Vec3::new(x, terrain_height, z);
+        // Add object-specific ground clearance to prevent below-ground spawning
+        let ground_clearance = match object_type {
+            "tree" => 0.5,   // Trees need clearance for roots/base
+            "rock" => 0.1,   // Rocks sit mostly on surface
+            "bush" => 0.2,   // Bushes can embed slightly
+            _ => 0.2,        // Default clearance
+        };
+        
+        let final_height = base_terrain_height + ground_clearance;
+        let position = Vec3::new(x, final_height, z);
         
         // Check spacing against existing objects
         let mut valid = true;
@@ -442,9 +451,9 @@ fn spawn_tree(
         Transform::from_xyz(position.x, position.y, position.z)
             .with_rotation(Quat::from_rotation_y(rotation)),
         
-        // Physics - static collision for trees
+        // Physics - static collision for trees (reduced to tight trunk collision)
         RigidBody::Static,
-        Collider::cylinder(8.0, 1.0), // Approximate tree collision (height, radius)
+        ColliderConstructorHierarchy::new(ColliderConstructor::ConvexHullFromMesh),
         
         // Game components
         WorldObject,
@@ -478,8 +487,8 @@ fn spawn_rock(
         
         // Physics - static collision for rocks
         RigidBody::Static,
-        Collider::cuboid(1.0, 1.0, 1.0), // Approximate rock collision
-        
+        ColliderConstructorHierarchy::new(ColliderConstructor::ConvexHullFromMesh),
+
         // Game components
         WorldObject,
         WorldObjectType::Rock(RockType::Rock1A), // Simplified for now
@@ -510,10 +519,10 @@ fn spawn_bush(
             .with_rotation(Quat::from_rotation_y(rotation))
             .with_scale(Vec3::splat(scale)),
         
-        // Physics - small collision for bushes (can walk through)
+        // Physics - smaller collision for bushes (easier navigation)
         RigidBody::Static,
-        Collider::cylinder(1.0, 0.5), // Small bush collision
-        
+        ColliderConstructorHierarchy::new(ColliderConstructor::ConvexHullFromMesh),
+
         // Game components
         WorldObject,
         WorldObjectType::Bush(BushType::Bush1A), // Simplified for now

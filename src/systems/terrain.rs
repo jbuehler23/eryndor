@@ -207,7 +207,7 @@ pub fn setup_terrain(
         // RigidBody::Static,
         // Collider::heightfield(heights, Vec3::new(config.size, 1.0, config.size)),
         // CollisionMargin(0.01), // Smaller margin for heightfield
-        
+        ColliderConstructorHierarchy::new(ColliderConstructor::ConvexHullFromMesh),
         // Game components
         Terrain,
         config.clone(),

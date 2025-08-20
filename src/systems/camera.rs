@@ -66,7 +66,13 @@ pub fn setup_camera(
         
         // Physics components - Avian 3D
         RigidBody::Dynamic, // Dynamic for gravity and realistic physics
-        Collider::capsule(0.5, 1.8), // Radius, height - proper human-sized collider
+        // Capsule collider positioned so bottom aligns with feet
+        Collider::capsule(0.5, 0.5),
+        ColliderTransform {
+            translation: Vec3::Y, // Lift collider so bottom = feet level
+            rotation: Rotation(Quat::IDENTITY),
+            scale: Vec3::ONE,
+        },
         
         // Prevent rotation on X and Z axes (character should stay upright)
         LockedAxes::new().lock_rotation_x().lock_rotation_z(),
