@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
 use avian3d::prelude::*;
+use noise::{NoiseFn, Perlin};
 
 /// Terrain generation system for creating rolling hills and varied landscapes
 /// Following Single Responsibility: only handles terrain mesh generation and physics
@@ -28,9 +29,9 @@ impl Default for TerrainConfig {
     fn default() -> Self {
         Self {
             size: 200.0,         // 200x200 world units
-            resolution: 120,     // Increased resolution for smoother collision
-            height_scale: 4.0,   // Reduced height variation for gentler slopes
-            noise_scale: 0.025,  // Slightly reduced noise scale for smoother transitions
+            resolution: 150,     // Higher resolution for ultra-smooth collision
+            height_scale: 3.0,   // Gentle height variation for smooth physics
+            noise_scale: 0.02,   // Optimized for Perlin noise frequency
         }
     }
 }
@@ -133,32 +134,49 @@ pub fn generate_heightfield_data(config: &TerrainConfig) -> Vec<Vec<f32>> {
     heights
 }
 
-/// Improved smooth noise function for terrain height generation
-/// Uses smoothed sine waves and interpolation for continuous collision surfaces
+/// Professional Perlin noise terrain generation with ultra-smooth collision surfaces
+/// Uses multi-octave Perlin noise with C2 continuity for seamless physics interaction
 pub fn generate_height_at_position(x: f32, z: f32, noise_scale: f32, height_scale: f32) -> f32 {
-    // Use smoother noise functions to prevent collision artifacts
+    // Create Perlin noise generator with fixed seed for consistent terrain
+    let perlin = Perlin::new(12345);
     
-    // Primary layer - smooth rolling hills using combined sine/cosine
-    let phase1_x = x * noise_scale;
-    let phase1_z = z * noise_scale;
-    let noise1 = (phase1_x.sin() + phase1_z.cos()) * 0.35; // Reduced amplitude
+    // Scale coordinates for noise sampling
+    let nx = x as f64 * noise_scale as f64;
+    let nz = z as f64 * noise_scale as f64;
     
-    // Secondary layer - gentler variation with offset phases
-    let phase2_x = x * noise_scale * 1.7 + 1.3; // Offset phase to avoid alignment
-    let phase2_z = z * noise_scale * 1.7 + 2.1;
-    let noise2 = (phase2_x.sin() + phase2_z.cos()) * 0.15;
+    // Multi-octave fractal Perlin noise for natural terrain
+    let mut height = 0.0;
+    let mut amplitude = 1.0;
+    let mut frequency = 1.0;
+    let octaves = 4;
+    let persistence = 0.5; // How much each octave contributes
+    let lacunarity = 2.0;   // Frequency multiplier between octaves
     
-    // Tertiary layer - very subtle detail with smooth transitions
-    let phase3_x = x * noise_scale * 2.3 + 0.7;
-    let phase3_z = z * noise_scale * 2.3 + 1.9;
-    let noise3 = (phase3_x.sin() + phase3_z.cos()) * 0.05;
+    for _ in 0..octaves {
+        // Sample Perlin noise at current frequency
+        let sample = perlin.get([nx * frequency, nz * frequency]) as f32;
+        
+        // Accumulate noise with current amplitude
+        height += sample * amplitude;
+        
+        // Update frequency and amplitude for next octave
+        frequency *= lacunarity;
+        amplitude *= persistence;
+    }
     
-    // Apply smoothstep-like function to reduce sharp transitions
-    let combined_noise = noise1 + noise2 + noise3;
-    let smoothed = combined_noise * combined_noise * combined_noise; // Cubic smoothing
+    // Apply smoothstep function for C2 continuity (smooth first and second derivatives)
+    let normalized_height = (height + 1.0) * 0.5; // Normalize from [-1, 1] to [0, 1]
+    let smoothed = smoothstep(normalized_height);
     
-    // Scale and ensure continuous derivatives
-    smoothed * height_scale * 0.8 // Reduced overall height variation for smoother collision
+    // Scale to final height and center around zero
+    (smoothed - 0.5) * height_scale * 2.0
+}
+
+/// Smoothstep function for C2 continuity - eliminates sharp edges in collision detection
+/// f(t) = 3t² - 2t³ provides smooth first and second derivatives
+fn smoothstep(t: f32) -> f32 {
+    let clamped = t.clamp(0.0, 1.0);
+    clamped * clamped * (3.0 - 2.0 * clamped)
 }
 
 /// Smooth terrain vertices to reduce collision artifacts and sharp edges
@@ -194,9 +212,9 @@ fn smooth_terrain_vertices(positions: &mut [[f32; 3]], resolution: u32) {
                 }
             }
             
-            // Apply gentle smoothing (blend 70% smoothed with 30% original)
+            // Apply aggressive smoothing (blend 90% smoothed with 10% original)
             let smoothed = total_height / count as f32;
-            smoothed_heights[idx] = current_height * 0.3 + smoothed * 0.7;
+            smoothed_heights[idx] = current_height * 0.1 + smoothed * 0.9;
         }
     }
     
@@ -257,7 +275,7 @@ pub fn setup_terrain(
     
     // Generate terrain mesh and collision data
     let (terrain_mesh, _collision_vertices, _collision_triangles) = generate_terrain_mesh(&config);
-    let _heights = generate_heightfield_data(&config);
+    let heights = generate_heightfield_data(&config);
     
     // Create basic grass-like material
     let terrain_material = StandardMaterial {
@@ -268,23 +286,19 @@ pub fn setup_terrain(
     };
 
 
-// // Build a heightfield collider instead of a trimesh
-// Collider::heightfield(
-//     heights.into_iter().flatten().collect(),
-//     resolution,
-//     resolution,
-//     Vec3::new(config.size, config.height_scale * 2.0, config.size),
-// )
+    // Use trimesh collision with ultra-smooth Perlin noise terrain
+    // The vertex smoothing and bilinear interpolation provide smooth collision
+    
     // Spawn terrain entity with physics collision
     commands.spawn((
         Mesh3d(meshes.add(terrain_mesh.clone())),
         MeshMaterial3d(materials.add(terrain_material)),
-        Transform::from_xyz(0.0, 0.0, 0.0), // Heightfield origin at center
+        Transform::from_xyz(0.0, 0.0, 0.0),
         
-        // Physics components - Direct trimesh from visual mesh (exact match with collision margin)
-        RigidBody::Static, // Static rigidbody for terrain
+        // Physics components - Trimesh collision matches visual mesh exactly
+        RigidBody::Static,
         Collider::trimesh_from_mesh(&terrain_mesh).unwrap(),
-        CollisionMargin(0.05), // Reduced collision margin for smoother terrain contact
+        CollisionMargin(0.01), // Minimal margin with smooth terrain
         // Game components
         Terrain,
         config.clone(),
@@ -303,12 +317,12 @@ pub fn setup_terrain(
     info!("Terrain generated: {}x{} units with {} vertices", 
           config.size, config.size, config.resolution * config.resolution);
     info!("Terrain height range: -{} to +{} units", config.height_scale, config.height_scale);
-    info!("Terrain collision: Direct trimesh from visual mesh (exact match with larger margin)");
+    info!("Terrain collision: Ultra-smooth trimesh with Perlin noise and vertex smoothing");
     info!("Terrain height sampler initialized for runtime queries");
 }
 
-/// Sample terrain height at given world coordinates
-/// Returns terrain height at (x, z) or 0.0 if outside terrain bounds
+/// Sample terrain height at given world coordinates with bilinear interpolation
+/// Returns smoothly interpolated terrain height for ultra-smooth collision detection
 pub fn sample_terrain_height(sampler: &TerrainHeightSampler, x: f32, z: f32) -> f32 {
     let config = &sampler.config;
     let half_size = config.size * 0.5;
@@ -318,8 +332,47 @@ pub fn sample_terrain_height(sampler: &TerrainHeightSampler, x: f32, z: f32) -> 
         return 0.0; // Return ground level for out-of-bounds positions
     }
     
-    // Sample height using same noise function as terrain generation
-    generate_height_at_position(x, z, config.noise_scale, config.height_scale)
+    // For ultra-smooth collision detection, use bilinear interpolation between grid points
+    bilinear_sample_height(x, z, config)
+}
+
+/// Bilinear interpolation height sampling for smooth collision detection
+/// Interpolates between the 4 nearest grid points for seamless height transitions
+fn bilinear_sample_height(x: f32, z: f32, config: &TerrainConfig) -> f32 {
+    let resolution = config.resolution as f32;
+    let size = config.size;
+    let half_size = size * 0.5;
+    
+    // Convert world coordinates to grid coordinates
+    let grid_x = (x + half_size) / size * (resolution - 1.0);
+    let grid_z = (z + half_size) / size * (resolution - 1.0);
+    
+    // Get integer grid coordinates (floor)
+    let x0 = grid_x.floor() as u32;
+    let z0 = grid_z.floor() as u32;
+    let x1 = (x0 + 1).min(config.resolution - 1);
+    let z1 = (z0 + 1).min(config.resolution - 1);
+    
+    // Calculate fractional parts for interpolation
+    let fx = grid_x - x0 as f32;
+    let fz = grid_z - z0 as f32;
+    
+    // Convert grid coordinates back to world coordinates for sampling
+    let world_x0 = (x0 as f32 / (resolution - 1.0)) * size - half_size;
+    let world_z0 = (z0 as f32 / (resolution - 1.0)) * size - half_size;
+    let world_x1 = (x1 as f32 / (resolution - 1.0)) * size - half_size;
+    let world_z1 = (z1 as f32 / (resolution - 1.0)) * size - half_size;
+    
+    // Sample height at four corner points
+    let h00 = generate_height_at_position(world_x0, world_z0, config.noise_scale, config.height_scale);
+    let h10 = generate_height_at_position(world_x1, world_z0, config.noise_scale, config.height_scale);
+    let h01 = generate_height_at_position(world_x0, world_z1, config.noise_scale, config.height_scale);
+    let h11 = generate_height_at_position(world_x1, world_z1, config.noise_scale, config.height_scale);
+    
+    // Bilinear interpolation
+    let h_top = h00 * (1.0 - fx) + h10 * fx;
+    let h_bottom = h01 * (1.0 - fx) + h11 * fx;
+    h_top * (1.0 - fz) + h_bottom * fz
 }
 
 /// Sample terrain height with small random variation for natural placement

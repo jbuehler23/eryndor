@@ -92,12 +92,12 @@ pub fn tnua_player_controls(
         let desired_velocity = movement_state.current_direction * movement_state.current_speed;
         controller.basis(TnuaBuiltinWalk {
             desired_velocity,
-            float_height: 0.1,        // Proper float height > center to bottom distance
+            float_height: 0.08,       // Optimized for ultra-smooth trimesh
             acceleration: movement_config.acceleration,
             air_acceleration: movement_config.air_acceleration,
-            cling_distance: 1.5,      // Better ground following over uneven terrain
-            spring_strength: 400.0,   // Stronger spring for stable character positioning
-            spring_dampening: 26.0,   // Balanced dampening for smooth movement
+            cling_distance: 1.2,      // Balanced surface following for smooth terrain
+            spring_strength: 500.0,   // Strong spring for stable positioning
+            spring_dampening: 28.0,   // Optimized dampening for smooth contact
             ..default()
         });
         
@@ -124,12 +124,12 @@ pub fn tnua_player_controls(
             let desired_velocity = movement_state.current_direction * movement_state.current_speed;
             controller.basis(TnuaBuiltinWalk {
                 desired_velocity,
-                float_height: 0.1,        // Consistent float height
+                float_height: 0.08,       // Consistent float height for smooth trimesh
                 acceleration: movement_config.acceleration,
                 air_acceleration: movement_config.air_acceleration,
-                cling_distance: 1.5,      // Better ground following over uneven terrain
-                spring_strength: 400.0,   // Stronger spring for stable character positioning
-                spring_dampening: 26.0,   // Balanced dampening for smooth movement
+                cling_distance: 1.2,      // Balanced surface following
+                spring_strength: 500.0,   // Stable positioning
+                spring_dampening: 28.0,   // Smooth contact
                 ..default()
             });
         } else {
@@ -140,12 +140,12 @@ pub fn tnua_player_controls(
             // Set zero velocity through Tnua
             controller.basis(TnuaBuiltinWalk {
                 desired_velocity: Vec3::ZERO,
-                float_height: 0.1,        // Consistent float height
+                float_height: 0.08,       // Consistent float height for smooth trimesh
                 acceleration: movement_config.acceleration,
                 air_acceleration: movement_config.air_acceleration,
-                cling_distance: 1.5,      // Better ground following over uneven terrain
-                spring_strength: 400.0,   // Stronger spring for stable character positioning
-                spring_dampening: 26.0,   // Balanced dampening for smooth movement
+                cling_distance: 1.2,      // Balanced surface following
+                spring_strength: 500.0,   // Stable positioning
+                spring_dampening: 28.0,   // Smooth contact
                 ..default()
             });
         }
