@@ -28,10 +28,10 @@ pub struct TerrainConfig {
 impl Default for TerrainConfig {
     fn default() -> Self {
         Self {
-            size: 200.0,         // 200x200 world units
-            resolution: 150,     // Higher resolution for ultra-smooth collision
-            height_scale: 3.0,   // Gentle height variation for smooth physics
-            noise_scale: 0.02,   // Optimized for Perlin noise frequency
+            size: 200.0,         // 200x200 world units  
+            resolution: 32,      // Low resolution for flat terrain testing
+            height_scale: 0.0,   // Completely flat - no height variation
+            noise_scale: 0.0,    // No noise - flat terrain only
         }
     }
 }
@@ -113,20 +113,18 @@ pub fn generate_terrain_mesh(config: &TerrainConfig) -> (Mesh, Vec<Vec3>, Vec<[u
     (mesh, collision_vertices, collision_triangles)
 }
 
-/// Generate heightfield data for Avian physics collider
-/// Returns a 2D matrix of height values for heightfield collider
-pub fn generate_heightfield_data(config: &TerrainConfig) -> Vec<Vec<f32>> {
+/// Generate simple flat heightfield data for ultra-smooth collision testing
+/// Returns a 2D matrix of height values - starting completely flat for testing
+pub fn generate_flat_heightfield_data(config: &TerrainConfig) -> Vec<Vec<f32>> {
     let resolution = config.resolution as usize;
     let mut heights = Vec::with_capacity(resolution);
     
-    for z in 0..resolution {
+    // Generate completely flat terrain for perfect collision testing
+    for _z in 0..resolution {
         let mut row = Vec::with_capacity(resolution);
-        for x in 0..resolution {
-            let world_x = (x as f32 / (resolution - 1) as f32) * config.size - config.size * 0.5;
-            let world_z = (z as f32 / (resolution - 1) as f32) * config.size - config.size * 0.5;
-            
-            let height = generate_height_at_position(world_x, world_z, config.noise_scale, config.height_scale);
-            row.push(height);
+        for _x in 0..resolution {
+            // All heights are 0.0 - perfectly flat terrain
+            row.push(0.0);
         }
         heights.push(row);
     }
@@ -273,21 +271,23 @@ pub fn setup_terrain(
 ) {
     let config = TerrainConfig::default();
     
-    // Generate terrain mesh and collision data
+    // Generate simple flat terrain for collision testing
     let (terrain_mesh, _collision_vertices, _collision_triangles) = generate_terrain_mesh(&config);
-    let heights = generate_heightfield_data(&config);
+    let heights = generate_flat_heightfield_data(&config);
     
     // Create basic grass-like material
     let terrain_material = StandardMaterial {
-        base_color: Color::srgb(0.3, 0.7, 0.2), // Green grass color
-        perceptual_roughness: 0.8, // Rough surface for realistic grass
-        metallic: 0.0,  // Non-metallic
+        base_color: Color::srgb(0.4, 0.8, 0.3), // Bright green for flat test terrain
+        perceptual_roughness: 0.8, 
+        metallic: 0.0,
         ..default()
     };
 
-
-    // Use trimesh collision with ultra-smooth Perlin noise terrain
-    // The vertex smoothing and bilinear interpolation provide smooth collision
+    // Use Avian3D heightfield collider - industry standard for smooth terrain collision
+    let heightfield_collider = Collider::heightfield(
+        heights,
+        Vec3::new(config.size, 1.0, config.size), // Scale: size x 1.0 height x size
+    );
     
     // Spawn terrain entity with physics collision
     commands.spawn((
@@ -295,10 +295,10 @@ pub fn setup_terrain(
         MeshMaterial3d(materials.add(terrain_material)),
         Transform::from_xyz(0.0, 0.0, 0.0),
         
-        // Physics components - Trimesh collision matches visual mesh exactly
+        // Physics components - Heightfield collider for ultra-smooth collision
         RigidBody::Static,
-        Collider::trimesh_from_mesh(&terrain_mesh).unwrap(),
-        CollisionMargin(0.01), // Minimal margin with smooth terrain
+        heightfield_collider,
+        CollisionMargin(0.0), // No margin needed with heightfield
         // Game components
         Terrain,
         config.clone(),
@@ -314,26 +314,19 @@ pub fn setup_terrain(
     commands.insert_resource(height_sampler);
     
     
-    info!("Terrain generated: {}x{} units with {} vertices", 
+    info!("FLAT TERRAIN TEST: {}x{} units with {} vertices", 
           config.size, config.size, config.resolution * config.resolution);
-    info!("Terrain height range: -{} to +{} units", config.height_scale, config.height_scale);
-    info!("Terrain collision: Ultra-smooth trimesh with Perlin noise and vertex smoothing");
+    info!("Terrain height: COMPLETELY FLAT (0.0 units) for collision testing");
+    info!("Terrain collision: Avian3D heightfield collider - industry standard approach");
     info!("Terrain height sampler initialized for runtime queries");
 }
 
-/// Sample terrain height at given world coordinates with bilinear interpolation
-/// Returns smoothly interpolated terrain height for ultra-smooth collision detection
-pub fn sample_terrain_height(sampler: &TerrainHeightSampler, x: f32, z: f32) -> f32 {
-    let config = &sampler.config;
-    let half_size = config.size * 0.5;
-    
-    // Check if position is within terrain bounds
-    if x < -half_size || x > half_size || z < -half_size || z > half_size {
-        return 0.0; // Return ground level for out-of-bounds positions
-    }
-    
-    // For ultra-smooth collision detection, use bilinear interpolation between grid points
-    bilinear_sample_height(x, z, config)
+/// Sample terrain height - always returns 0.0 for flat terrain testing
+/// This eliminates all height variation to ensure perfect collision testing
+pub fn sample_terrain_height(_sampler: &TerrainHeightSampler, _x: f32, _z: f32) -> f32 {
+    // Always return 0.0 for completely flat terrain
+    // This eliminates any possibility of height-based collision issues
+    0.0
 }
 
 /// Bilinear interpolation height sampling for smooth collision detection

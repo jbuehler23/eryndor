@@ -79,8 +79,7 @@ pub fn check_asset_loading(
     }
 }
 
-use bevy_tnua::prelude::*;
-use bevy_tnua_avian3d::*;
+// Removed Tnua imports - using simple kinematic approach
 
 // System to spawn the player entity once the assets are loaded
 pub fn spawn_player_when_assets_loaded(
@@ -96,14 +95,10 @@ pub fn spawn_player_when_assets_loaded(
     if matches!(asset_server.load_state(&character_assets.knight), LoadState::Loaded) {
         let player_entity = commands.spawn((
             SceneRoot(character_assets.knight.clone()),
-            Transform::from_xyz(-70.0, 20.0, -70.0), // Spawn position
-            RigidBody::Dynamic,
-            TnuaController::default(),
-            TnuaAvian3dSensorShape(Collider::cylinder(0.35, 0.0)), // Smaller sensor for better ground detection
-            LockedAxes::new().lock_rotation_x().lock_rotation_z(),
-            LinearVelocity::default(),
-            Friction::new(0.5), // Reduced friction for smoother movement
-            Restitution::new(0.0),
+            Transform::from_xyz(-70.0, 2.0, -70.0), // Lower spawn position for flat terrain
+            RigidBody::Kinematic, // TRUE KINEMATIC - no physics interference
+            LockedAxes::new().lock_rotation_x().lock_rotation_z(), // Prevent tipping over
+            // Removed LinearVelocity, Friction, Restitution - kinematic bodies don't use them
         )).id();
 
         // Add collider as child entity positioned at character center

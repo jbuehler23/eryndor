@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use avian3d::prelude::*;
-use bevy_tnua::prelude::*;
-use bevy_tnua_avian3d::*;
+// Removed Tnua imports - using custom character controller
 
 pub mod systems;
 pub mod components;
@@ -26,9 +25,7 @@ impl Plugin for EryndorPlugin {
             .add_plugins(avian3d::debug_render::PhysicsDebugPlugin::default()) // Enable collision shape visualization
             .insert_resource(Gravity(Vec3::NEG_Y * 9.81)) // Earth-like gravity
             
-            // Character controller - Tnua integration for professional movement
-            .add_plugins(TnuaControllerPlugin::new(FixedUpdate))
-            .add_plugins(TnuaAvian3dPlugin::new(FixedUpdate))
+            // Character controller - Custom Avian3D kinematic controller (industry standard)
             
             // Resources - Global state
             .insert_resource(load_config())
@@ -52,14 +49,14 @@ impl Plugin for EryndorPlugin {
                 spawn_player_when_assets_loaded.after(load_initial_assets),
                 handle_input,
                 toggle_collision_debug, // F3 to toggle collision debug
-                tnua_player_controls.after(handle_input).in_set(TnuaUserControlsSystemSet),
-                update_animation_states.after(tnua_player_controls),
+                kinematic_character_controller.after(handle_input),
+                update_animation_states.after(kinematic_character_controller),
                 setup_knight_animations_when_ready, // New system to setup animations when scene loads
                 play_animations.after(update_animation_states),
-                update_camera.after(tnua_player_controls),
+                update_camera.after(kinematic_character_controller),
                 update_ui,
                 debug_animation_state.after(update_animation_states),
-                debug_player_collision.after(tnua_player_controls), // Debug player-terrain collision
+                debug_player_collision.after(kinematic_character_controller), // Debug player-terrain collision
                 check_asset_loading,
                 spawn_world_objects.after(load_world_object_assets).after(setup_biomes), // Spawn world objects when assets loaded and biomes ready
                 update_config_system,

@@ -2,19 +2,20 @@ use bevy::prelude::*;
 use avian3d::prelude::*;
 use bevy_animation::graph::{AnimationGraph, AnimationGraphHandle};
 use bevy::gltf::GltfAssetLabel;
-use crate::components::{Player, AnimationController, AnimationAssets, KnightAnimationSetup};
+use crate::components::{Player, AnimationController, AnimationAssets, KnightAnimationSetup, PlayerMovementState};
 use crate::resources::InputResource;
 
-/// Animation system - updates character animation states based on input and physics
+/// Animation system - updates character animation states based on kinematic movement
 /// Following Single Responsibility: only handles animation state updates
 pub fn update_animation_states(
     time: Res<Time>,
     input: Res<InputResource>,
-    mut animation_query: Query<(&mut AnimationController, &LinearVelocity), With<Player>>,
+    mut animation_query: Query<(&mut AnimationController, &PlayerMovementState, &Transform), With<Player>>,
+    spatial_query: SpatialQuery,
 ) {
-    for (mut anim_controller, velocity) in animation_query.iter_mut() {
-        // Ground detection - improved threshold for proper landing detection
-        let is_grounded = velocity.y.abs() < 0.2; // Much more sensitive to landing
+    for (mut anim_controller, movement_state, transform) in animation_query.iter_mut() {
+        // Ground detection using spatial query (same as kinematic character controller)
+        let is_grounded = is_grounded_for_animation(transform.translation, &spatial_query);
         
         // Determine input-based movement state
         let is_moving = input.forward || input.backward || input.left || input.right || 
@@ -22,9 +23,16 @@ pub fn update_animation_states(
         let is_running = is_moving && input.up; // Shift key for running
         let is_jumping = input.down; // Space key for jumping (now handled with landing logic)
         
-        // Update animation state based on input and physics
+        // Create velocity vector from kinematic movement state for animation system
+        let current_velocity = Vec3::new(
+            movement_state.current_direction.x * movement_state.current_speed,
+            0.0, // Y velocity handled separately by gravity/jumping
+            movement_state.current_direction.z * movement_state.current_speed
+        );
+        
+        // Update animation state based on kinematic movement
         let state_changed = anim_controller.update_state(
-            **velocity, 
+            current_velocity, 
             is_grounded,
             is_moving,
             is_running, 
@@ -39,6 +47,27 @@ pub fn update_animation_states(
                 anim_controller.current_state
             );
         }
+    }
+}
+
+/// Ground detection for animation system - matches kinematic character controller
+fn is_grounded_for_animation(pos: Vec3, spatial_query: &SpatialQuery) -> bool {
+    use avian3d::prelude::*;
+    
+    let ray_origin = pos;
+    let ray_direction = Dir3::NEG_Y;
+    let max_distance = 1.1;
+    
+    if let Some(_hit) = spatial_query.cast_ray(
+        ray_origin, 
+        ray_direction, 
+        max_distance, 
+        true, 
+        &SpatialQueryFilter::default()
+    ) {
+        true
+    } else {
+        false
     }
 }
 

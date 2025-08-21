@@ -13,9 +13,9 @@ bevy_animation = "0.16"
 # Physics and collision detection - Avian (future official Bevy physics)
 avian3d = { version = "0.3", features = ["collider-from-mesh"] }
 
-# Character controller for physics-based movement (latest versions for Bevy 0.16)
-bevy-tnua = "0.24" 
-bevy-tnua-avian3d = "0.5"
+# Removed Tnua - implementing custom Avian3D character controller
+# bevy-tnua = "0.24" 
+# bevy-tnua-avian3d = "0.5"
 
 # Networking for multiplayer
 lightyear = "0.18"
