@@ -5,57 +5,7 @@ use bevy_tnua_avian3d::*;
 use crate::resources::InputResource;
 use crate::components::{Player, PlayerMovementConfig, PlayerMovementState};
 
-/// System to spawn the player with Tnua character controller
-/// Following Single Responsibility: only handles player entity creation
-pub fn setup_player(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    // Spawn the player entity with physics - initially with fallback capsule
-    let player_entity = commands.spawn((
-        // Visual representation - Start with fallback, will be replaced when assets load
-        Mesh3d(meshes.add(Capsule3d::new(0.5, 1.8))),
-        MeshMaterial3d(materials.add(StandardMaterial {
-            base_color: Color::srgb(0.2, 0.4, 0.8), // Blue player fallback
-            ..default()
-        })),
-        
-        Transform::from_xyz(-70.0, 15.0, -70.0), // Safe spawn location away from world objects
-        
-        // Physics components - Avian 3D with Tnua character controller
-        RigidBody::Dynamic, // Dynamic for gravity and realistic physics
-        
-        // Manual character capsule collider - reasonable size for human character  
-        Collider::capsule(0.4, 1.8), // Character capsule: radius=0.4, height=1.8
-        
-        // Tnua character controller components
-        TnuaController::default(),
-        // Sensor shape for ground detection (slightly smaller than main collider)
-        TnuaAvian3dSensorShape(Collider::cylinder(0.35, 0.1)), // radius=0.35, height=0.1
-        
-        // Lock rotation on X and Z axes, allow Y-axis rotation for turning
-        LockedAxes::new().lock_rotation_x().lock_rotation_z(),
-        
-        // Physics properties for character movement
-        LinearVelocity::default(),
-        Friction::new(0.7), // Ground friction for stopping
-        Restitution::new(0.0), // No bounce when hitting things
-    )).id();
-    
-    // Add game components separately to avoid bundle size limits
-    commands.entity(player_entity).insert((
-        Player,
-        PlayerMovementConfig::default(),
-        PlayerMovementState::default(), // Smooth movement state tracking
-        crate::components::PlayerStats::default(),
-        crate::components::AnimationController::default(),
-        crate::components::CharacterModel::default(), // Track character model type
-        crate::components::KnightAnimationSetup::default(), // Track animation setup
-    ));
-    
-    info!("Player spawned with fallback capsule - will upgrade to 3D model when assets load");
-}
+
 
 /// Tnua-based player movement system with professional character controller
 /// Following Single Responsibility: handles player movement input and feeds it to Tnua controller
@@ -133,8 +83,8 @@ pub fn tnua_player_controls(
             movement_state.current_speed = movement_state.target_speed;
         }
         
-        // Smooth direction interpolation for turning
-        let direction_lerp_speed = 15.0 * time.delta_secs();
+        // Fast direction interpolation for responsive MMO turning
+        let direction_lerp_speed = 25.0 * time.delta_secs(); // Faster turning for responsive feel
         movement_state.current_direction = movement_state.current_direction
             .lerp(movement_state.target_direction, direction_lerp_speed.clamp(0.0, 1.0));
         
@@ -142,9 +92,12 @@ pub fn tnua_player_controls(
         let desired_velocity = movement_state.current_direction * movement_state.current_speed;
         controller.basis(TnuaBuiltinWalk {
             desired_velocity,
-            float_height: 0.0,        // No float - direct ground contact
+            float_height: 0.1,        // Proper float height > center to bottom distance
             acceleration: movement_config.acceleration,
             air_acceleration: movement_config.air_acceleration,
+            cling_distance: 1.5,      // Better ground following over uneven terrain
+            spring_strength: 400.0,   // Stronger spring for stable character positioning
+            spring_dampening: 26.0,   // Balanced dampening for smooth movement
             ..default()
         });
         
@@ -153,8 +106,8 @@ pub fn tnua_player_controls(
              let target_direction = movement_state.current_direction.normalize();
              let target_rotation = Quat::from_rotation_y(target_direction.x.atan2(target_direction.z));
              
-             // Smooth rotation interpolation (10 rad/s rotation speed)
-             let t = (10.0 * time.delta_secs()).clamp(0.0, 1.0);
+             // Fast rotation for responsive MMO character turning (15 rad/s)
+             let t = (15.0 * time.delta_secs()).clamp(0.0, 1.0);
              player_transform.rotation = player_transform.rotation.slerp(target_rotation, t);
          }
     } else {
@@ -171,9 +124,12 @@ pub fn tnua_player_controls(
             let desired_velocity = movement_state.current_direction * movement_state.current_speed;
             controller.basis(TnuaBuiltinWalk {
                 desired_velocity,
-                float_height: 0.0,
+                float_height: 0.1,        // Consistent float height
                 acceleration: movement_config.acceleration,
                 air_acceleration: movement_config.air_acceleration,
+                cling_distance: 1.5,      // Better ground following over uneven terrain
+                spring_strength: 400.0,   // Stronger spring for stable character positioning
+                spring_dampening: 26.0,   // Balanced dampening for smooth movement
                 ..default()
             });
         } else {
@@ -184,9 +140,12 @@ pub fn tnua_player_controls(
             // Set zero velocity through Tnua
             controller.basis(TnuaBuiltinWalk {
                 desired_velocity: Vec3::ZERO,
-                float_height: 0.0,
+                float_height: 0.1,        // Consistent float height
                 acceleration: movement_config.acceleration,
                 air_acceleration: movement_config.air_acceleration,
+                cling_distance: 1.5,      // Better ground following over uneven terrain
+                spring_strength: 400.0,   // Stronger spring for stable character positioning
+                spring_dampening: 26.0,   // Balanced dampening for smooth movement
                 ..default()
             });
         }
@@ -196,6 +155,9 @@ pub fn tnua_player_controls(
     if input.down { // Space for jumping (input.up is shift for running)
         controller.action(TnuaBuiltinJump {
             height: movement_config.jump_height,
+            upslope_extra_gravity: -20.0,   // Extra upward force when jumping uphill
+            shorten_extra_gravity: 25.0,    // Faster falling for responsive jump feel
+            allow_in_air: false,            // No double jumping for realistic MMO feel
             ..default()
         });
     }

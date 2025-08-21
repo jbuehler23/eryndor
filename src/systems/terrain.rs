@@ -28,9 +28,9 @@ impl Default for TerrainConfig {
     fn default() -> Self {
         Self {
             size: 200.0,         // 200x200 world units
-            resolution: 100,     // 100x100 vertices (reasonable detail)
-            height_scale: 20.0,  // Up to 20 units height variation  
-            noise_scale: 0.05,   // Good balance of hills and valleys
+            resolution: 120,     // Increased resolution for smoother collision
+            height_scale: 4.0,   // Reduced height variation for gentler slopes
+            noise_scale: 0.025,  // Slightly reduced noise scale for smoother transitions
         }
     }
 }
@@ -85,7 +85,10 @@ pub fn generate_terrain_mesh(config: &TerrainConfig) -> (Mesh, Vec<Vec3>, Vec<[u
         }
     }
     
-    // Calculate proper normals for lighting
+    // Smooth vertices to reduce collision artifacts
+    smooth_terrain_vertices(&mut positions, resolution);
+    
+    // Calculate proper normals for lighting after smoothing
     calculate_normals(&mut normals, &positions, &indices, resolution);
     
     // Convert positions to Vec3 for collision
@@ -130,20 +133,77 @@ pub fn generate_heightfield_data(config: &TerrainConfig) -> Vec<Vec<f32>> {
     heights
 }
 
-/// Simple noise function for terrain height generation
-/// Uses multiple octaves for more natural-looking hills
+/// Improved smooth noise function for terrain height generation
+/// Uses smoothed sine waves and interpolation for continuous collision surfaces
 pub fn generate_height_at_position(x: f32, z: f32, noise_scale: f32, height_scale: f32) -> f32 {
-    // Primary noise layer - large rolling hills
-    let noise1 = (x * noise_scale).sin() * (z * noise_scale).cos() * 0.7;
+    // Use smoother noise functions to prevent collision artifacts
     
-    // Secondary noise layer - medium details  
-    let noise2 = (x * noise_scale * 2.0).sin() * (z * noise_scale * 2.0).cos() * 0.2;
+    // Primary layer - smooth rolling hills using combined sine/cosine
+    let phase1_x = x * noise_scale;
+    let phase1_z = z * noise_scale;
+    let noise1 = (phase1_x.sin() + phase1_z.cos()) * 0.35; // Reduced amplitude
     
-    // Tertiary noise layer - fine details
-    let noise3 = (x * noise_scale * 4.0).sin() * (z * noise_scale * 4.0).cos() * 0.1;
+    // Secondary layer - gentler variation with offset phases
+    let phase2_x = x * noise_scale * 1.7 + 1.3; // Offset phase to avoid alignment
+    let phase2_z = z * noise_scale * 1.7 + 2.1;
+    let noise2 = (phase2_x.sin() + phase2_z.cos()) * 0.15;
     
-    // Combine noise layers and apply height scaling
-    (noise1 + noise2 + noise3) * height_scale
+    // Tertiary layer - very subtle detail with smooth transitions
+    let phase3_x = x * noise_scale * 2.3 + 0.7;
+    let phase3_z = z * noise_scale * 2.3 + 1.9;
+    let noise3 = (phase3_x.sin() + phase3_z.cos()) * 0.05;
+    
+    // Apply smoothstep-like function to reduce sharp transitions
+    let combined_noise = noise1 + noise2 + noise3;
+    let smoothed = combined_noise * combined_noise * combined_noise; // Cubic smoothing
+    
+    // Scale and ensure continuous derivatives
+    smoothed * height_scale * 0.8 // Reduced overall height variation for smoother collision
+}
+
+/// Smooth terrain vertices to reduce collision artifacts and sharp edges
+/// Uses neighbor averaging to create gentler height transitions
+fn smooth_terrain_vertices(positions: &mut [[f32; 3]], resolution: u32) {
+    let res = resolution as usize;
+    let mut smoothed_heights = vec![0.0; res * res];
+    
+    // Apply smoothing kernel to height values
+    for z in 0..res {
+        for x in 0..res {
+            let idx = z * res + x;
+            let current_height = positions[idx][1];
+            
+            let mut total_height = current_height;
+            let mut count = 1;
+            
+            // Sample neighboring vertices for smoothing
+            let neighbors = [
+                (-1, -1), (0, -1), (1, -1),
+                (-1,  0),          (1,  0),
+                (-1,  1), (0,  1), (1,  1),
+            ];
+            
+            for (dx, dz) in neighbors.iter() {
+                let nx = x as i32 + dx;
+                let nz = z as i32 + dz;
+                
+                if nx >= 0 && nx < res as i32 && nz >= 0 && nz < res as i32 {
+                    let neighbor_idx = (nz as usize) * res + (nx as usize);
+                    total_height += positions[neighbor_idx][1];
+                    count += 1;
+                }
+            }
+            
+            // Apply gentle smoothing (blend 70% smoothed with 30% original)
+            let smoothed = total_height / count as f32;
+            smoothed_heights[idx] = current_height * 0.3 + smoothed * 0.7;
+        }
+    }
+    
+    // Apply smoothed heights back to positions
+    for i in 0..smoothed_heights.len() {
+        positions[i][1] = smoothed_heights[i];
+    }
 }
 
 /// Calculate proper vertex normals for smooth lighting
@@ -196,10 +256,8 @@ pub fn setup_terrain(
     let config = TerrainConfig::default();
     
     // Generate terrain mesh and collision data
-    let (terrain_mesh, collision_vertices, collision_triangles) = generate_terrain_mesh(&config);
-    
-    // Store triangle count before move
-    let triangle_count = collision_triangles.len();
+    let (terrain_mesh, _collision_vertices, _collision_triangles) = generate_terrain_mesh(&config);
+    let _heights = generate_heightfield_data(&config);
     
     // Create basic grass-like material
     let terrain_material = StandardMaterial {
@@ -208,18 +266,25 @@ pub fn setup_terrain(
         metallic: 0.0,  // Non-metallic
         ..default()
     };
-    
-    
+
+
+// // Build a heightfield collider instead of a trimesh
+// Collider::heightfield(
+//     heights.into_iter().flatten().collect(),
+//     resolution,
+//     resolution,
+//     Vec3::new(config.size, config.height_scale * 2.0, config.size),
+// )
     // Spawn terrain entity with physics collision
     commands.spawn((
         Mesh3d(meshes.add(terrain_mesh.clone())),
         MeshMaterial3d(materials.add(terrain_material)),
-        Transform::from_xyz(0.0, 0.0, 0.0),
+        Transform::from_xyz(0.0, 0.0, 0.0), // Heightfield origin at center
         
-        // Physics components - Direct trimesh collision from mesh data
+        // Physics components - Direct trimesh from visual mesh (exact match with collision margin)
         RigidBody::Static, // Static rigidbody for terrain
-        Collider::trimesh(collision_vertices, collision_triangles),
-        CollisionMargin(0.01), // Collision margin for trimesh stability
+        Collider::trimesh_from_mesh(&terrain_mesh).unwrap(),
+        CollisionMargin(0.05), // Reduced collision margin for smoother terrain contact
         // Game components
         Terrain,
         config.clone(),
@@ -238,7 +303,7 @@ pub fn setup_terrain(
     info!("Terrain generated: {}x{} units with {} vertices", 
           config.size, config.size, config.resolution * config.resolution);
     info!("Terrain height range: -{} to +{} units", config.height_scale, config.height_scale);
-    info!("Terrain collision: Direct trimesh with {} triangles", triangle_count);
+    info!("Terrain collision: Direct trimesh from visual mesh (exact match with larger margin)");
     info!("Terrain height sampler initialized for runtime queries");
 }
 

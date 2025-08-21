@@ -49,7 +49,7 @@ impl Default for GameCamera {
 // Camera setup system
 pub fn setup_camera(mut commands: Commands) {
     // Calculate initial camera position using spherical coordinates to match dynamic system
-    let player_spawn = Vec3::new(-70.0, 15.0, -70.0);
+    let player_spawn = Vec3::new(-70.0, 20.0, -70.0); // Updated to match new player spawn
     let camera_defaults = GameCamera::default();
     
     // Calculate camera offset using same spherical coordinate math as update_camera

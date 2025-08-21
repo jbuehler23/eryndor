@@ -11,7 +11,7 @@ bevy = { version = "0.16", features = ["default", "bevy_gltf"] }
 bevy_animation = "0.16"
 
 # Physics and collision detection - Avian (future official Bevy physics)
-avian3d = "0.3"
+avian3d = { version = "0.3", features = ["collider-from-mesh"] }
 
 # Character controller for physics-based movement (latest versions for Bevy 0.16)
 bevy-tnua = "0.24" 
@@ -80,3 +80,5 @@ inherits = "release"
 opt-level = "s"
 lto = true
 codegen-units = 1
+
+

@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy::asset::LoadState;
 use bevy::gltf::GltfAssetLabel;
 use avian3d::prelude::*;
-use crate::components::{Player, CharacterModel, CharacterType};
+use crate::components::{Player, PlayerMovementConfig, PlayerMovementState, PlayerStats};
 
 // Asset loading resource to track loaded assets
 #[derive(Resource, Default)]
@@ -79,33 +79,53 @@ pub fn check_asset_loading(
     }
 }
 
-// System to upgrade player from capsule to 3D character model when assets are loaded
-pub fn upgrade_player_model(
+use bevy_tnua::prelude::*;
+use bevy_tnua_avian3d::*;
+
+// System to spawn the player entity once the assets are loaded
+pub fn spawn_player_when_assets_loaded(
     mut commands: Commands,
     character_assets: Res<CharacterAssets>,
     asset_server: Res<AssetServer>,
-    mut player_query: Query<(Entity, &mut CharacterModel), (With<Player>, With<Mesh3d>)>,
+    mut already_spawned: Local<bool>,
 ) {
-    for (player_entity, mut character_model) in player_query.iter_mut() {
-        // Check if the knight model is loaded
-        if matches!(asset_server.load_state(&character_assets.knight), LoadState::Loaded) {
-            // Remove the capsule mesh components and manual collider
-            commands.entity(player_entity)
-                .remove::<Mesh3d>()
-                .remove::<MeshMaterial3d<StandardMaterial>>()
-                .remove::<Collider>(); // Remove manual capsule collider
-                
-            // Add the 3D character model with manual collider (more reliable for character controller)
-            commands.entity(player_entity).insert((
-                SceneRoot(character_assets.knight.clone()),
-                // Manual character collider - more reliable than GLTF mesh generation for player movement
-                Collider::capsule(0.4, 1.8), // Character capsule: radius=0.4, height=1.8
+    if *already_spawned {
+        return;
+    }
+
+    if matches!(asset_server.load_state(&character_assets.knight), LoadState::Loaded) {
+        let player_entity = commands.spawn((
+            SceneRoot(character_assets.knight.clone()),
+            Transform::from_xyz(-70.0, 20.0, -70.0), // Spawn position
+            RigidBody::Dynamic,
+            TnuaController::default(),
+            TnuaAvian3dSensorShape(Collider::cylinder(0.35, 0.0)), // Smaller sensor for better ground detection
+            LockedAxes::new().lock_rotation_x().lock_rotation_z(),
+            LinearVelocity::default(),
+            Friction::new(0.5), // Reduced friction for smoother movement
+            Restitution::new(0.0),
+        )).id();
+
+        // Add collider as child entity positioned at character center
+        commands.entity(player_entity).with_children(|children| {
+            children.spawn((
+                Collider::capsule(0.4, 1.8), // Character body collider
+                Transform::from_xyz(0.0, 0.9, 0.0), // Center collider on character body (half height up from feet)
+                CollisionMargin(0.01), // Tight collision margin
             ));
-            
-            // Update character model tracking
-            character_model.character_type = CharacterType::Knight;
-            
-            info!("Player upgraded from capsule to Knight 3D model - animations will be setup when scene loads!");
-        }
+        });
+
+        commands.entity(player_entity).insert((
+            Player,
+            PlayerMovementConfig::default(),
+            PlayerMovementState::default(),
+            crate::components::PlayerStats::default(),
+            crate::components::AnimationController::default(),
+            crate::components::CharacterModel::default(),
+            crate::components::KnightAnimationSetup::default(),
+        ));
+
+        info!("Player spawned with Knight 3D model");
+        *already_spawned = true;
     }
 }

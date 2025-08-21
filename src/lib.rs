@@ -40,7 +40,6 @@ impl Plugin for EryndorPlugin {
             
             // Core systems - Order matters for dependencies
             .add_systems(Startup, (
-                setup_player, // Spawn player entity first
                 setup_camera, // Then setup camera to look at player
                 setup_ui,
                 load_initial_assets,
@@ -50,6 +49,7 @@ impl Plugin for EryndorPlugin {
                 load_world_object_assets, // Load forest/nature assets
             ))
             .add_systems(Update, (
+                spawn_player_when_assets_loaded.after(load_initial_assets),
                 handle_input,
                 toggle_collision_debug, // F3 to toggle collision debug
                 tnua_player_controls.after(handle_input).in_set(TnuaUserControlsSystemSet),
@@ -61,7 +61,6 @@ impl Plugin for EryndorPlugin {
                 debug_animation_state.after(update_animation_states),
                 debug_player_collision.after(tnua_player_controls), // Debug player-terrain collision
                 check_asset_loading,
-                upgrade_player_model.after(check_asset_loading),
                 spawn_world_objects.after(load_world_object_assets).after(setup_biomes), // Spawn world objects when assets loaded and biomes ready
                 update_config_system,
                 save_config_on_exit,

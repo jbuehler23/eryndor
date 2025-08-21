@@ -29,12 +29,15 @@ pub struct PlayerMovementState {
 impl Default for PlayerMovementConfig {
     fn default() -> Self {
         Self {
-            walk_speed: 8.0,
-            run_speed: 12.0,
-            jump_height: 4.0,
-            acceleration: 40.0,        // Units per second squared for acceleration
-            air_acceleration: 20.0,    // Reduced acceleration in air
-            deceleration: 35.0,        // Slightly faster deceleration for responsive feel
+            // MMO-optimized speeds for responsive feel
+            walk_speed: 7.0,           // Slightly slower for better control precision
+            run_speed: 14.0,           // Faster for exciting movement
+            jump_height: 3.5,          // Reduced for more realistic jumping
+            
+            // High responsiveness for competitive MMO feel
+            acceleration: 60.0,        // Faster acceleration for snappy movement
+            air_acceleration: 25.0,    // Better air control for platforming
+            deceleration: 80.0,        // Very fast stopping for precise positioning
         }
     }
 }

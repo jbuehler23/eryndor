@@ -30,6 +30,8 @@ pub fn debug_player_collision(
     terrain_sampler: Option<Res<TerrainHeightSampler>>,
     gravity: Res<Gravity>,
     player_query: Query<(Entity, &Transform, &LinearVelocity, Option<&RigidBody>, Option<&Collider>), With<Player>>,
+    children_query: Query<&Children>,
+    collider_query: Query<&Collider>,
 ) {
     if !debug_config.enabled {
         return;
@@ -73,12 +75,31 @@ pub fn debug_player_collision(
     info!("   Movement State: Horizontal={}, Falling={}, Rising={}", 
           is_moving_horizontally, is_falling, is_rising);
     
+    // Check for child colliders
+    let mut has_child_collider = false;
+    let mut child_collider_info = None;
+    
+    if let Ok(children) = children_query.get(entity) {
+        for child in children.iter() {
+            if let Ok(child_collider) = collider_query.get(child) {
+                has_child_collider = true;
+                child_collider_info = Some(child_collider);
+                break;
+            }
+        }
+    }
+    
     // Debug physics components
     info!("   Gravity: {:?}", gravity.0);
     info!("   RigidBody: {:?}", rigidbody);
-    info!("   Has Collider: {}", collider.is_some());
+    info!("   Has Collider: {} (Parent: {}, Child: {})", 
+          collider.is_some() || has_child_collider, collider.is_some(), has_child_collider);
+    
     if let Some(collider) = collider {
-        info!("   Collider Type: {:?}", collider);
+        info!("   Parent Collider: {:?}", collider);
+    }
+    if let Some(child_collider) = child_collider_info {
+        info!("   Child Collider: {:?}", child_collider);
     }
     
     // Flag potential issues
