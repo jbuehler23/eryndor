@@ -87,7 +87,7 @@ pub fn kinematic_character_controller(
         movement_state.current_direction = movement_state.current_direction
             .lerp(movement_state.target_direction, direction_lerp_speed.clamp(0.0, 1.0));
         
-        // Apply movement directly to Transform (TRUE kinematic approach)
+        // Apply movement directly to Transform
         let desired_velocity = movement_state.current_direction * movement_state.current_speed;
         let movement_delta = desired_velocity * time.delta_secs();
         
@@ -100,12 +100,12 @@ pub fn kinematic_character_controller(
             children
         );
         
-        // Rotate player to face movement direction for proper MMO feel
+        // Rotate player to face movement direction
         if !input.mouse_right_held && movement_state.current_direction.length() > 0.1 {
              let target_direction = movement_state.current_direction.normalize();
              let target_rotation = Quat::from_rotation_y(target_direction.x.atan2(target_direction.z));
              
-             // Fast rotation for responsive MMO character turning (15 rad/s)
+             // Fast rotation for responsive turning
              let t = (15.0 * time.delta_secs()).clamp(0.0, 1.0);
              player_transform.rotation = player_transform.rotation.slerp(target_rotation, t);
          }
