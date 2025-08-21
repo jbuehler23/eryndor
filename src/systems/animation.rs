@@ -10,12 +10,12 @@ use crate::resources::InputResource;
 pub fn update_animation_states(
     time: Res<Time>,
     input: Res<InputResource>,
-    mut animation_query: Query<(&mut AnimationController, &PlayerMovementState, &Transform), With<Player>>,
+    mut animation_query: Query<(&mut AnimationController, &PlayerMovementState, &Transform, &Children), With<Player>>,
     spatial_query: SpatialQuery,
 ) {
-    for (mut anim_controller, movement_state, transform) in animation_query.iter_mut() {
+    for (mut anim_controller, movement_state, transform, children) in animation_query.iter_mut() {
         // Ground detection using spatial query (same as kinematic character controller)
-        let is_grounded = is_grounded_for_animation(transform.translation, &spatial_query);
+        let is_grounded = is_grounded_for_animation(transform.translation, &spatial_query, children);
         
         // Determine input-based movement state
         let is_moving = input.forward || input.backward || input.left || input.right || 
@@ -51,21 +51,30 @@ pub fn update_animation_states(
 }
 
 /// Ground detection for animation system - matches kinematic character controller
-fn is_grounded_for_animation(pos: Vec3, spatial_query: &SpatialQuery) -> bool {
+fn is_grounded_for_animation(pos: Vec3, spatial_query: &SpatialQuery, children: &Children) -> bool {
     use avian3d::prelude::*;
     
     let ray_origin = pos;
     let ray_direction = Dir3::NEG_Y;
-    let max_distance = 1.1;
+    let max_distance = 3.0; // Increased to match player controller
     
-    if let Some(_hit) = spatial_query.cast_ray(
+    // Create filter to exclude all child colliders (we don't have player entity here, just children)
+    let mut excluded_entities = Vec::new();
+    for child in children.iter() {
+        excluded_entities.push(child);
+    }
+    let filter = SpatialQueryFilter::default().with_excluded_entities(excluded_entities);
+    
+    if let Some(hit) = spatial_query.cast_ray(
         ray_origin, 
         ray_direction, 
         max_distance, 
         true, 
-        &SpatialQueryFilter::default()
+        &filter
     ) {
-        true
+        // Consider grounded only if we hit something at a reasonable distance
+        // Distance should be > 0.1 (to avoid self-collision) and < 1.2 (reasonable ground distance)
+        hit.distance > 0.1 && hit.distance <= 1.2
     } else {
         false
     }

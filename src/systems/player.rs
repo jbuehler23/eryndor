@@ -10,11 +10,11 @@ use crate::components::{Player, PlayerMovementConfig, PlayerMovementState};
 pub fn kinematic_character_controller(
     time: Res<Time>,
     input: Res<InputResource>,
-    mut player_query: Query<(&mut Transform, &PlayerMovementConfig, &mut PlayerMovementState), With<Player>>,
+    mut player_query: Query<(Entity, &mut Transform, &PlayerMovementConfig, &mut PlayerMovementState, &Children), With<Player>>,
     camera_query: Query<(&Transform, &crate::systems::camera::GameCamera), (With<crate::systems::camera::GameCamera>, Without<Player>)>,
     spatial_query: SpatialQuery,
 ) {
-    let Ok((mut player_transform, movement_config, mut movement_state)) = player_query.single_mut() else {
+    let Ok((player_entity, mut player_transform, movement_config, mut movement_state, children)) = player_query.single_mut() else {
         return;
     };
     
@@ -95,7 +95,9 @@ pub fn kinematic_character_controller(
         player_transform.translation = collide_and_slide(
             player_transform.translation, 
             movement_delta,
-            &spatial_query
+            &spatial_query,
+            player_entity,
+            children
         );
         
         // Rotate player to face movement direction for proper MMO feel
@@ -124,7 +126,9 @@ pub fn kinematic_character_controller(
             player_transform.translation = collide_and_slide(
                 player_transform.translation, 
                 movement_delta,
-                &spatial_query
+                &spatial_query,
+                player_entity,
+                children
             );
         } else {
             // Full stop
@@ -137,48 +141,97 @@ pub fn kinematic_character_controller(
     // Handle manual gravity and jumping (kinematic bodies don't have automatic gravity)
     if input.down { // Space for jumping
         // Check if on ground using spatial query
-        if is_grounded(player_transform.translation, &spatial_query) {
+        if is_grounded(player_transform.translation, &spatial_query, player_entity, children) {
             // Add vertical velocity component for jumping
             // This will be handled by manual gravity application
         }
     }
     
     // Apply manual gravity (since kinematic bodies don't respond to physics gravity)
-    apply_manual_gravity(&mut player_transform, &spatial_query, time.delta_secs());
+    apply_manual_gravity(&mut player_transform, &spatial_query, time.delta_secs(), player_entity, children);
 }
 
 /// Collide and slide movement - the core of smooth character movement
 /// This prevents getting stuck on terrain edges and provides smooth sliding
-fn collide_and_slide(current_pos: Vec3, movement_delta: Vec3, _spatial_query: &SpatialQuery) -> Vec3 {
-    // For now, simple implementation - apply movement directly
-    // TODO: Add actual collision detection and sliding response
-    current_pos + movement_delta
+fn collide_and_slide(current_pos: Vec3, movement_delta: Vec3, spatial_query: &SpatialQuery, player_entity: Entity, children: &Children) -> Vec3 {
+    // Use shape casting to test if the movement is safe
+    let movement_length = movement_delta.length();
+    if movement_length < 0.001 {
+        return current_pos; // No movement needed
+    }
+    
+    let movement_direction = movement_delta / movement_length;
+    
+    // Cast a capsule shape (matching the character's collider) along the movement path
+    let capsule_shape = Collider::capsule(0.4, 1.8); // Match character collider size
+    let shape_direction = Dir3::new(movement_direction).unwrap_or(Dir3::NEG_Y);
+    let max_distance = movement_length + 0.01; // Small buffer
+    
+    // Perform shape cast
+    let shape_cast_config = ShapeCastConfig {
+        max_distance,
+        ..default()
+    };
+    
+    // Create filter to exclude player entity AND all child colliders
+    let mut excluded_entities = vec![player_entity];
+    for child in children.iter() {
+        excluded_entities.push(child);
+    }
+    let filter = SpatialQueryFilter::default().with_excluded_entities(excluded_entities);
+    
+    if let Some(hit) = spatial_query.cast_shape(
+        &capsule_shape,
+        current_pos + Vec3::new(0.0, 0.9, 0.0), // Center capsule at character center
+        Quat::IDENTITY,
+        shape_direction,
+        &shape_cast_config,
+        &filter
+    ) {
+        // Collision detected - stop just before the collision point
+        let safe_distance = (hit.distance - 0.05).max(0.0); // Stay 5cm away from collision
+        let safe_movement = movement_direction * safe_distance;
+        current_pos + safe_movement
+    } else {
+        // No collision - safe to move
+        current_pos + movement_delta
+    }
 }
 
 /// Check if character is on ground using downward raycast
-fn is_grounded(pos: Vec3, spatial_query: &SpatialQuery) -> bool {
+fn is_grounded(pos: Vec3, spatial_query: &SpatialQuery, player_entity: Entity, children: &Children) -> bool {
     let ray_origin = pos;
     let ray_direction = Dir3::NEG_Y;
-    let max_distance = 1.1;
+    let max_distance = 3.0; // Increased to ensure we can detect ground from spawn height
     
-    if let Some(_hit) = spatial_query.cast_ray(
+    // Create filter to exclude player entity AND all child colliders  
+    let mut excluded_entities = vec![player_entity];
+    for child in children.iter() {
+        excluded_entities.push(child);
+    }
+    
+    let filter = SpatialQueryFilter::default().with_excluded_entities(excluded_entities);
+    
+    if let Some(hit) = spatial_query.cast_ray(
         ray_origin, 
         ray_direction, 
         max_distance, 
         true, 
-        &SpatialQueryFilter::default()
+        &filter
     ) {
-        true
+        // Consider grounded only if we hit something at a reasonable distance
+        // Distance should be > 0.1 (to avoid self-collision) and < 1.2 (reasonable ground distance)
+        hit.distance > 0.1 && hit.distance <= 1.2
     } else {
         false
     }
 }
 
 /// Apply manual gravity for kinematic character
-fn apply_manual_gravity(transform: &mut Transform, spatial_query: &SpatialQuery, delta_time: f32) {
+fn apply_manual_gravity(transform: &mut Transform, spatial_query: &SpatialQuery, delta_time: f32, player_entity: Entity, children: &Children) {
     // Simple ground check - if not grounded, apply gravity
-    if !is_grounded(transform.translation, spatial_query) {
+    if !is_grounded(transform.translation, spatial_query, player_entity, children) {
         let gravity_delta = Vec3::NEG_Y * 9.81 * delta_time;
-        transform.translation = collide_and_slide(transform.translation, gravity_delta, spatial_query);
+        transform.translation = collide_and_slide(transform.translation, gravity_delta, spatial_query, player_entity, children);
     }
 }
