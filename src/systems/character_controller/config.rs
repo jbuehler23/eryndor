@@ -157,8 +157,8 @@ impl CharacterControllerConfig {
             },
             slopes: SlopeConfig {
                 max_walkable_angle: std::f32::consts::PI / 4.5, // Slightly steeper: ~40°
-                uphill_speed_multiplier: 0.7,
-                downhill_speed_multiplier: 1.3,
+                uphill_speed_multiplier: 0.9, // Less penalty for better MMO feel
+                downhill_speed_multiplier: 1.1, // Less boost for stability
                 ..Default::default()
             },
             step_up: StepUpConfig {

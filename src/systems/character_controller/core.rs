@@ -93,6 +93,17 @@ pub fn enhanced_character_controller(
         &config,
         &excluded_entities,
     );
+    
+    // Debug ground detection on slopes
+    if ground_info.is_some() {
+        let ground_result = ground_info.as_ref().unwrap();
+        let slope_angle_deg = ground_result.normal.dot(Vec3::Y).acos() * 180.0 / std::f32::consts::PI;
+        if slope_angle_deg > 5.0 { // Only log on slopes > 5 degrees
+            println!("DEBUG SLOPE: pos={:.1},{:.1},{:.1} grounded={} slope={:.1}° normal=({:.2},{:.2},{:.2})", 
+                     player_transform.translation.x, player_transform.translation.y, player_transform.translation.z,
+                     is_grounded, slope_angle_deg, ground_result.normal.x, ground_result.normal.y, ground_result.normal.z);
+        }
+    }
 
     controller_state.is_grounded = is_grounded;
     if let Some(ground_result) = ground_info {
@@ -116,6 +127,13 @@ pub fn enhanced_character_controller(
     if input.backward { movement_input.z -= 1.0; }
     if input.left { movement_input.x -= 1.0; }
     if input.right { movement_input.x += 1.0; }
+    
+    // Debug input detection
+    if input.forward || input.backward || input.left || input.right || both_mouse_forward {
+        println!("DEBUG INPUT: forward={} backward={} left={} right={} mouse_forward={} movement_input=({:.2},{:.2},{:.2})", 
+                 input.forward, input.backward, input.left, input.right, both_mouse_forward, 
+                 movement_input.x, movement_input.y, movement_input.z);
+    }
 
     // Apply camera-relative movement
     let desired_movement = if movement_input.length() > 0.0 {
@@ -142,13 +160,24 @@ pub fn enhanced_character_controller(
     } else {
         0.0
     };
+    
+    // Debug target speed calculation
+    if desired_movement.length() > 0.0 {
+        println!("DEBUG SPEED: desired_movement_len={:.3}, running={}, target_speed={:.3}", 
+                 desired_movement.length(), input.up, target_speed);
+    }
 
     // Handle jumping
+    if input.down {
+        println!("DEBUG JUMP: space pressed - is_jumping={}, is_grounded={}", 
+                 movement_state.is_jumping, controller_state.is_grounded);
+    }
     if input.down && !movement_state.is_jumping && controller_state.is_grounded {
         let jump_velocity = (2.0 * 9.81 * config.air.jump_height).sqrt();
         controller_state.vertical_velocity = jump_velocity;
         movement_state.is_jumping = true;
         controller_state.movement_state = MovementState::Jumping;
+        println!("DEBUG JUMP: Jump initiated with velocity={}", jump_velocity);
     }
 
     // Apply movement based on grounded state
@@ -181,7 +210,7 @@ pub fn enhanced_character_controller(
     }
 
     // Update movement state for animations
-    update_movement_state(&mut controller_state, &movement_state, target_speed);
+    update_movement_state(&mut controller_state, &movement_state, target_speed, &config);
 
     // Handle player rotation (when not using mouselook)
     if !input.mouse_right_held && desired_movement.length() > 0.1 {
@@ -218,6 +247,12 @@ fn handle_ground_movement(
     // Apply slope speed modifiers
     let slope_modifier = calculate_slope_modifier(controller_state.ground_normal, desired_direction, config);
     let effective_speed = movement_state.current_speed * slope_modifier;
+    
+    // Debug movement calculations
+    if target_speed > 0.0 || desired_direction.length() > 0.0 {
+        println!("DEBUG MOVEMENT: target_speed={:.3}, current_speed={:.3}, slope_modifier={:.3}, effective_speed={:.3}, desired_dir_len={:.3}", 
+                 target_speed, movement_state.current_speed, slope_modifier, effective_speed, desired_direction.length());
+    }
 
     // Calculate desired velocity
     let desired_velocity = if desired_direction.length() > 0.0 {
@@ -238,6 +273,8 @@ fn handle_ground_movement(
     let movement_delta = current_velocity * dt;
 
     if movement_delta.length() > 0.001 {
+        println!("DEBUG MOVE: movement_delta={:.3}, current_velocity={:.3}, effective_speed={:.3}", 
+                 movement_delta.length(), current_velocity.length(), effective_speed);
         // Apply enhanced collision detection and resolution
         let (new_position, final_velocity, collision_result) = CollisionSystem::collide_and_slide(
             transform.translation,
@@ -265,8 +302,11 @@ fn handle_ground_movement(
             new_position
         };
 
+        // Calculate actual velocity from position change
+        let position_delta = final_position - transform.translation;
+        controller_state.velocity = position_delta / dt;
+        
         transform.translation = final_position;
-        controller_state.velocity = final_velocity / dt; // Convert back to velocity
 
         // Update movement state based on collision result
         if collision_result.hit {
@@ -388,6 +428,7 @@ fn update_movement_state(
     controller_state: &mut CharacterControllerState,
     movement_state: &PlayerMovementState,
     target_speed: f32,
+    config: &CharacterControllerConfig,
 ) {
     // Only update if not in special states (jumping, landing, etc.)
     if matches!(
@@ -395,7 +436,7 @@ fn update_movement_state(
         MovementState::Idle | MovementState::Walking | MovementState::Running
     ) {
         controller_state.movement_state = if target_speed > 0.1 {
-            if target_speed > movement_state.walk_speed * 1.5 {
+            if target_speed > config.ground.walk_speed * 1.5 {
                 MovementState::Running
             } else {
                 MovementState::Walking

@@ -3,6 +3,7 @@ use avian3d::prelude::*;
 use crate::components::Player;
 use crate::utils::{TerrainHeightSampler};
 use crate::systems::terrain_simple::sample_terrain_height;
+use crate::systems::character_controller::CharacterControllerState;
 
 /// Debug system for collision and terrain interaction analysis
 /// Logs player position, velocity, and terrain height for debugging floating issues
@@ -30,7 +31,7 @@ pub fn debug_player_collision(
     mut debug_config: ResMut<CollisionDebugConfig>,
     terrain_sampler: Option<Res<TerrainHeightSampler>>,
     gravity: Res<Gravity>,
-    player_query: Query<(Entity, &Transform, &LinearVelocity, Option<&RigidBody>, Option<&Collider>), With<Player>>,
+    player_query: Query<(Entity, &Transform, Option<&LinearVelocity>, Option<&CharacterControllerState>, Option<&RigidBody>, Option<&Collider>), With<Player>>,
     children_query: Query<&Children>,
     collider_query: Query<&Collider>,
 ) {
@@ -45,7 +46,7 @@ pub fn debug_player_collision(
     
     debug_config.last_log_time = current_time;
     
-    let Ok((entity, transform, velocity, rigidbody, collider)) = player_query.single() else {
+    let Ok((entity, transform, linear_velocity, controller_state, rigidbody, collider)) = player_query.single() else {
         return;
     };
     
@@ -68,6 +69,15 @@ pub fn debug_player_collision(
     // Calculate how far above/below terrain the player is
     let height_diff = player_pos.y - terrain_height;
     
+    // Use enhanced character controller velocity if available, otherwise fall back to physics velocity
+    let velocity = if let Some(controller) = controller_state {
+        Vec3::new(controller.velocity.x, controller.vertical_velocity, controller.velocity.z)
+    } else if let Some(linear_vel) = linear_velocity {
+        **linear_vel
+    } else {
+        Vec3::ZERO
+    };
+    
     // Check velocity to understand movement state
     let is_moving_horizontally = velocity.x.abs() > 0.1 || velocity.z.abs() > 0.1;
     let is_falling = velocity.y < -0.1;
@@ -83,6 +93,14 @@ pub fn debug_player_collision(
     info!("   Velocity Magnitude: {:.4}", velocity.length());
     info!("   Movement State: Horizontal={}, Falling={}, Rising={}", 
           is_moving_horizontally, is_falling, is_rising);
+    
+    // Enhanced character controller debug info
+    if let Some(controller) = controller_state {
+        info!("   Controller State: {:?}", controller.movement_state);
+        info!("   Is Grounded: {}", controller.is_grounded);
+        info!("   Ground Normal: ({:.2}, {:.2}, {:.2})", 
+              controller.ground_normal.x, controller.ground_normal.y, controller.ground_normal.z);
+    }
     
     // Check for child colliders
     let mut has_child_collider = false;

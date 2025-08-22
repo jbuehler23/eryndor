@@ -53,6 +53,7 @@ impl Plugin for EryndorPlugin {
             ))
             .add_systems(Update, (
                 spawn_player_when_assets_loaded.after(load_initial_assets),
+                setup_character_controller.after(spawn_player_when_assets_loaded), // Setup controller after player spawn
                 handle_input,
                 toggle_collision_debug, // F3 to toggle collision debug
                 toggle_character_controller_debug, // F4-F7 for enhanced controller debug

@@ -24,6 +24,13 @@ pub fn handle_input(
     input_resource.up = keyboard.pressed(KeyCode::ShiftLeft); // Shift for running
     input_resource.down = keyboard.pressed(KeyCode::Space); // Space for jumping
     
+    // Debug input detection
+    if input_resource.forward || input_resource.backward || input_resource.left || input_resource.right || input_resource.down {
+        println!("INPUT DEBUG: W={} S={} A={} D={} Space={} Shift={}", 
+                 input_resource.forward, input_resource.backward, input_resource.left, 
+                 input_resource.right, input_resource.down, input_resource.up);
+    }
+    
     // Mouse button state tracking
     input_resource.mouse_left_just_pressed = mouse.just_pressed(MouseButton::Left);
     input_resource.mouse_right_just_pressed = mouse.just_pressed(MouseButton::Right);

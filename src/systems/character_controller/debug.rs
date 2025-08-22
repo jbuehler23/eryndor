@@ -133,11 +133,12 @@ fn draw_collision_normals(
                     SurfaceType::Ceiling => Color::srgb(1.0, 0.0, 1.0), // Magenta for ceiling
                 };
 
-                let normal_end = hit.point + hit.normal * debug_config.vector_scale * 0.5;
-                gizmos.line(hit.point, normal_end, normal_color);
+                let hit_point = position + *direction * hit.distance;
+                let normal_end = hit_point + hit.normal * debug_config.vector_scale * 0.5;
+                gizmos.line(hit_point, normal_end, normal_color);
                 
                 // Draw small sphere at hit point
-                gizmos.sphere(hit.point, Quat::IDENTITY, 0.05, normal_color);
+                gizmos.sphere(hit_point, 0.05, normal_color);
             }
         }
     }

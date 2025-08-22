@@ -173,7 +173,7 @@ impl CollisionSystem {
             &shape_cast_config,
             &filter,
         ) {
-            let normal = hit.normal;
+            let normal = hit.normal1;
             let slide_vector = Self::project_on_plane(direction, normal);
             let is_walkable = Self::is_surface_walkable(&normal, config);
 
@@ -181,7 +181,7 @@ impl CollisionSystem {
                 hit: true,
                 normal,
                 distance: hit.distance,
-                point: hit.point,
+                point: cast_origin + direction * hit.distance,
                 slide_vector,
                 is_walkable,
             })
@@ -251,7 +251,7 @@ impl CollisionSystem {
                 hit: true,
                 normal: hit.normal,
                 distance: hit.distance,
-                point: hit.point,
+                point: ray_origin + ray_direction.as_vec3() * hit.distance,
                 slide_vector: Vec3::ZERO,
                 is_walkable: Self::is_surface_walkable(&hit.normal, config),
             };
@@ -298,7 +298,7 @@ impl CollisionSystem {
         )?;
 
         // 2. Cast upward to find step height
-        let up_cast_origin = forward_hit.point;
+        let up_cast_origin = forward_cast_origin + forward_direction.as_vec3() * forward_hit.distance;
         let up_direction = Dir3::Y;
         
         let up_hit = spatial_query.cast_ray(
@@ -344,7 +344,8 @@ impl CollisionSystem {
         ) {
             if Self::is_surface_walkable(&landing_hit.normal, config) {
                 // Valid step-up location found
-                return Some(landing_hit.point + Vec3::Y * 0.1); // Slight elevation for safety
+                let landing_point = up_cast_origin + Dir3::NEG_Y.as_vec3() * landing_hit.distance;
+                return Some(landing_point + Vec3::Y * 0.1); // Slight elevation for safety
             }
         }
 
