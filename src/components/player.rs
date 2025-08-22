@@ -24,6 +24,8 @@ pub struct PlayerMovementState {
     pub target_speed: f32,           // Target speed to accelerate/decelerate towards
     pub current_direction: Vec3,     // Current movement direction (normalized)
     pub target_direction: Vec3,      // Target movement direction (normalized)
+    pub vertical_velocity: f32,      // Current vertical velocity for jumping/falling
+    pub is_jumping: bool,            // Whether player is currently jumping
 }
 
 impl Default for PlayerMovementConfig {
@@ -49,6 +51,8 @@ impl Default for PlayerMovementState {
             target_speed: 0.0,
             current_direction: Vec3::ZERO,
             target_direction: Vec3::ZERO,
+            vertical_velocity: 0.0,
+            is_jumping: false,
         }
     }
 }

@@ -21,12 +21,12 @@ pub fn update_animation_states(
         let is_moving = input.forward || input.backward || input.left || input.right || 
                        (input.mouse_left_held && input.mouse_right_held); // WoW both-button forward
         let is_running = is_moving && input.up; // Shift key for running
-        let is_jumping = input.down; // Space key for jumping (now handled with landing logic)
+        let is_jumping = movement_state.is_jumping || movement_state.vertical_velocity > 0.1; // Currently jumping or rising
         
         // Create velocity vector from kinematic movement state for animation system
         let current_velocity = Vec3::new(
             movement_state.current_direction.x * movement_state.current_speed,
-            0.0, // Y velocity handled separately by gravity/jumping
+            movement_state.vertical_velocity, // Include vertical velocity for proper animation states
             movement_state.current_direction.z * movement_state.current_speed
         );
         

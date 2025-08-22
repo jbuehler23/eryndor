@@ -138,17 +138,19 @@ pub fn kinematic_character_controller(
         }
     }
     
-    // Handle manual gravity and jumping (kinematic bodies don't have automatic gravity)
-    if input.down { // Space for jumping
+    // Handle jumping (Space key)
+    if input.down && !movement_state.is_jumping {
         // Check if on ground using spatial query
         if is_grounded(player_transform.translation, &spatial_query, player_entity, children) {
-            // Add vertical velocity component for jumping
-            // This will be handled by manual gravity application
+            // Start jump with initial velocity
+            let jump_velocity = (2.0 * 9.81 * movement_config.jump_height).sqrt(); // Physics formula: v = sqrt(2gh)
+            movement_state.vertical_velocity = jump_velocity;
+            movement_state.is_jumping = true;
         }
     }
     
-    // Apply manual gravity (since kinematic bodies don't respond to physics gravity)
-    apply_manual_gravity(&mut player_transform, &spatial_query, time.delta_secs(), player_entity, children);
+    // Apply manual gravity and vertical movement (since kinematic bodies don't respond to physics gravity)
+    apply_gravity_and_vertical_movement(&mut player_transform, &mut movement_state, &spatial_query, time.delta_secs(), player_entity, children);
 }
 
 /// Collide and slide movement - the core of smooth character movement
@@ -227,11 +229,45 @@ fn is_grounded(pos: Vec3, spatial_query: &SpatialQuery, player_entity: Entity, c
     }
 }
 
-/// Apply manual gravity for kinematic character
-fn apply_manual_gravity(transform: &mut Transform, spatial_query: &SpatialQuery, delta_time: f32, player_entity: Entity, children: &Children) {
-    // Simple ground check - if not grounded, apply gravity
-    if !is_grounded(transform.translation, spatial_query, player_entity, children) {
-        let gravity_delta = Vec3::NEG_Y * 9.81 * delta_time;
-        transform.translation = collide_and_slide(transform.translation, gravity_delta, spatial_query, player_entity, children);
+/// Apply gravity and handle vertical movement for kinematic character (jumping/falling)
+fn apply_gravity_and_vertical_movement(
+    transform: &mut Transform, 
+    movement_state: &mut PlayerMovementState, 
+    spatial_query: &SpatialQuery, 
+    delta_time: f32, 
+    player_entity: Entity, 
+    children: &Children
+) {
+    // Apply gravity to vertical velocity
+    movement_state.vertical_velocity -= 9.81 * delta_time;
+    
+    // Calculate vertical movement delta
+    let vertical_delta = Vec3::Y * movement_state.vertical_velocity * delta_time;
+    
+    // Apply vertical movement using collide_and_slide
+    let new_position = collide_and_slide(transform.translation, vertical_delta, spatial_query, player_entity, children);
+    
+    // Check if we hit something (landed or hit ceiling)
+    let actual_movement = new_position - transform.translation;
+    let intended_movement = vertical_delta;
+    
+    // If we didn't move as much as intended in Y direction, we hit something
+    if (actual_movement.y - intended_movement.y).abs() > 0.001 {
+        // Check if we're moving downward (landing) or upward (hitting ceiling)
+        if movement_state.vertical_velocity < 0.0 {
+            // Landing - stop vertical movement and mark as grounded
+            movement_state.vertical_velocity = 0.0;
+            movement_state.is_jumping = false;
+        } else {
+            // Hit ceiling - stop upward movement but continue falling
+            movement_state.vertical_velocity = 0.0;
+        }
+    }
+    
+    transform.translation = new_position;
+    
+    // Extra check: if we're on ground and not intentionally jumping, stop vertical movement
+    if !movement_state.is_jumping && is_grounded(transform.translation, spatial_query, player_entity, children) {
+        movement_state.vertical_velocity = 0.0;
     }
 }

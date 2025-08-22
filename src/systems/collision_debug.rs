@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 use avian3d::prelude::*;
 use crate::components::Player;
-use crate::systems::terrain::{TerrainHeightSampler, sample_terrain_height};
+use crate::utils::{TerrainHeightSampler};
+use crate::systems::terrain_simple::sample_terrain_height;
 
 /// Debug system for collision and terrain interaction analysis
 /// Logs player position, velocity, and terrain height for debugging floating issues
@@ -50,11 +51,18 @@ pub fn debug_player_collision(
     
     let player_pos = transform.translation;
     
-    // Get terrain height at player position
+    // Get terrain height at player position using height sampler
     let terrain_height = if let Some(sampler) = terrain_sampler.as_ref() {
         sample_terrain_height(sampler, player_pos.x, player_pos.z)
     } else {
         0.0
+    };
+    
+    // Also get biome info for debugging (using direct sampling for biome type only)
+    let (_direct_height, biome) = if let Some(sampler) = terrain_sampler.as_ref() {
+        sampler.sample_height_and_biome(player_pos.x, player_pos.z)
+    } else {
+        (0.0, crate::systems::biomes::BiomeType::Plains)
     };
     
     // Calculate how far above/below terrain the player is
@@ -68,8 +76,9 @@ pub fn debug_player_collision(
     info!("COLLISION DEBUG:");
     info!("   Player Entity: {:?}", entity);
     info!("   Player Pos: ({:.2}, {:.2}, {:.2})", player_pos.x, player_pos.y, player_pos.z);
-    info!("   Terrain Height: {:.2}", terrain_height);
-    info!("   Height Above Ground: {:.2}", height_diff);
+    info!("   Terrain Height (Grid): {:.3}", terrain_height);
+    info!("   Biome Type: {:?}", biome);
+    info!("   Height Above Ground: {:.3}", height_diff);
     info!("   Velocity: ({:.2}, {:.2}, {:.2})", velocity.x, velocity.y, velocity.z);
     info!("   Velocity Magnitude: {:.4}", velocity.length());
     info!("   Movement State: Horizontal={}, Falling={}, Rising={}", 

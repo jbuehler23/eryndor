@@ -95,7 +95,7 @@ pub fn spawn_player_when_assets_loaded(
     if matches!(asset_server.load_state(&character_assets.knight), LoadState::Loaded) {
         let player_entity = commands.spawn((
             SceneRoot(character_assets.knight.clone()),
-            Transform::from_xyz(-70.0, 2.0, -70.0), // Lower spawn position for flat terrain
+            Transform::from_xyz(-70.0, 15.0, -70.0), // Higher spawn position for biome terrain
             RigidBody::Kinematic, // TRUE KINEMATIC - no physics interference
             LockedAxes::new().lock_rotation_x().lock_rotation_z(), // Prevent tipping over
             // Removed LinearVelocity, Friction, Restitution - kinematic bodies don't use them

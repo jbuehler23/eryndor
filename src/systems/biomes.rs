@@ -9,7 +9,10 @@ use crate::systems::terrain::TerrainHeightSampler;
 pub enum BiomeType {
     Forest,      // Dense trees, thick vegetation
     Plains,      // Open grassland, scattered objects  
-    Rocky,       // More rocks, sparse vegetation
+    Hills,       // Rolling hills with moderate elevation
+    Mountains,   // High elevation areas with dramatic terrain
+    Desert,      // Arid areas with dune-like terrain
+    Rocky,       // More rocks, sparse vegetation (legacy)
     Wetland,     // Future: marsh areas with water features
 }
 
@@ -204,10 +207,13 @@ pub fn debug_biome_visualization(
 ) {
     for biome in &biome_system.biomes {
         let color = match biome.biome_type {
-            BiomeType::Forest => Color::srgb(0.2, 0.8, 0.2), // Green
-            BiomeType::Plains => Color::srgb(0.8, 0.8, 0.2), // Yellow
-            BiomeType::Rocky => Color::srgb(0.6, 0.6, 0.6),  // Gray
-            BiomeType::Wetland => Color::srgb(0.2, 0.2, 0.8), // Blue
+            BiomeType::Forest => Color::srgb(0.2, 0.8, 0.2),    // Green
+            BiomeType::Plains => Color::srgb(0.8, 0.8, 0.2),    // Yellow
+            BiomeType::Hills => Color::srgb(0.4, 0.6, 0.2),     // Olive
+            BiomeType::Mountains => Color::srgb(0.5, 0.5, 0.5), // Gray
+            BiomeType::Desert => Color::srgb(0.9, 0.7, 0.3),    // Sandy
+            BiomeType::Rocky => Color::srgb(0.6, 0.6, 0.6),     // Gray
+            BiomeType::Wetland => Color::srgb(0.2, 0.2, 0.8),   // Blue
         };
         
         // Draw biome influence circles at ground level using Bevy 0.16 API

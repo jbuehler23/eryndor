@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "A fantasy MMO built with Bevy and Rust"
 authors = ["Joe"]
+default-run = "eryndor"
 
 [dependencies]
 # Core game engine with explicit GLTF support  
@@ -11,7 +12,7 @@ bevy = { version = "0.16", features = ["default", "bevy_gltf"] }
 bevy_animation = "0.16"
 
 # Physics and collision detection - Avian (future official Bevy physics)
-avian3d = { version = "0.3", features = ["collider-from-mesh"] }
+avian3d = { version = "0.3", features = ["collider-from-mesh", "diagnostic_ui", "bevy_diagnostic"] }
 
 # Removed Tnua - implementing custom Avian3D character controller
 # bevy-tnua = "0.24" 
