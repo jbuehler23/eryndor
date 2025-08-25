@@ -92,9 +92,17 @@ pub fn kinematic_character_controller(
         let movement_delta = desired_velocity * time.delta_secs();
         
         // Move character using collide_and_slide
-        player_transform.translation = collide_and_slide(
+        let new_position = collide_and_slide(
             player_transform.translation, 
             movement_delta,
+            &spatial_query,
+            player_entity,
+            children
+        );
+        
+        // Apply ground snapping for smooth terrain following
+        player_transform.translation = apply_ground_snapping(
+            new_position,
             &spatial_query,
             player_entity,
             children
@@ -123,9 +131,17 @@ pub fn kinematic_character_controller(
             let desired_velocity = movement_state.current_direction * movement_state.current_speed;
             let movement_delta = desired_velocity * time.delta_secs();
             
-            player_transform.translation = collide_and_slide(
+            let new_position = collide_and_slide(
                 player_transform.translation, 
                 movement_delta,
+                &spatial_query,
+                player_entity,
+                children
+            );
+            
+            // Apply ground snapping for smooth terrain following
+            player_transform.translation = apply_ground_snapping(
+                new_position,
                 &spatial_query,
                 player_entity,
                 children
@@ -153,27 +169,21 @@ pub fn kinematic_character_controller(
     apply_gravity_and_vertical_movement(&mut player_transform, &mut movement_state, &spatial_query, time.delta_secs(), player_entity, children);
 }
 
-/// Collide and slide movement - the core of smooth character movement
-/// This prevents getting stuck on terrain edges and provides smooth sliding
+/// Enhanced collide and slide movement with proper surface sliding
+/// Uses iterative collision resolution to slide along surfaces instead of stopping
 fn collide_and_slide(current_pos: Vec3, movement_delta: Vec3, spatial_query: &SpatialQuery, player_entity: Entity, children: &Children) -> Vec3 {
-    // Use shape casting to test if the movement is safe
-    let movement_length = movement_delta.length();
-    if movement_length < 0.001 {
+    const MAX_ITERATIONS: u32 = 4;
+    const COLLISION_MARGIN: f32 = 0.02; // 2cm safety margin
+    const MAX_WALKABLE_ANGLE: f32 = 45.0_f32.to_radians(); // 45 degrees
+    
+    let initial_movement_length = movement_delta.length();
+    if initial_movement_length < 0.001 {
         return current_pos; // No movement needed
     }
-    
-    let movement_direction = movement_delta / movement_length;
-    
-    // Cast a capsule shape (matching the character's collider) along the movement path
+
+    let mut position = current_pos;
+    let mut remaining_movement = movement_delta;
     let capsule_shape = Collider::capsule(0.4, 1.8); // Match character collider size
-    let shape_direction = Dir3::new(movement_direction).unwrap_or(Dir3::NEG_Y);
-    let max_distance = movement_length + 0.01; // Small buffer
-    
-    // Perform shape cast
-    let shape_cast_config = ShapeCastConfig {
-        max_distance,
-        ..default()
-    };
     
     // Create filter to exclude player entity AND all child colliders
     let mut excluded_entities = vec![player_entity];
@@ -181,23 +191,89 @@ fn collide_and_slide(current_pos: Vec3, movement_delta: Vec3, spatial_query: &Sp
         excluded_entities.push(child);
     }
     let filter = SpatialQueryFilter::default().with_excluded_entities(excluded_entities);
-    
-    if let Some(hit) = spatial_query.cast_shape(
-        &capsule_shape,
-        current_pos + Vec3::new(0.0, 0.9, 0.0), // Center capsule at character center
-        Quat::IDENTITY,
-        shape_direction,
-        &shape_cast_config,
-        &filter
-    ) {
-        // Collision detected - stop just before the collision point
-        let safe_distance = (hit.distance - 0.05).max(0.0); // Stay 5cm away from collision
-        let safe_movement = movement_direction * safe_distance;
-        current_pos + safe_movement
-    } else {
-        // No collision - safe to move
-        current_pos + movement_delta
+
+    for iteration in 0..MAX_ITERATIONS {
+        let movement_length = remaining_movement.length();
+        if movement_length < 0.001 {
+            break; // No significant movement left
+        }
+
+        let movement_direction = remaining_movement.normalize();
+        let shape_direction = Dir3::new(movement_direction).unwrap_or(Dir3::NEG_Y);
+        
+        // Shape cast configuration
+        let shape_cast_config = ShapeCastConfig {
+            max_distance: movement_length + COLLISION_MARGIN,
+            ..default()
+        };
+
+        // Perform shape cast from capsule center
+        if let Some(hit) = spatial_query.cast_shape(
+            &capsule_shape,
+            position + Vec3::new(0.0, 0.9, 0.0), // Center capsule at character center
+            Quat::IDENTITY,
+            shape_direction,
+            &shape_cast_config,
+            &filter
+        ) {
+            // Collision detected
+            let hit_distance = hit.distance;
+            let surface_normal = hit.normal1; // Surface normal
+            
+            // Move to collision point minus safety margin
+            let safe_distance = (hit_distance - COLLISION_MARGIN).max(0.0);
+            position += movement_direction * safe_distance;
+            
+            // Calculate remaining movement distance
+            let consumed_distance = safe_distance;
+            let remaining_distance = movement_length - consumed_distance;
+            
+            if remaining_distance <= 0.001 {
+                break; // No significant movement left
+            }
+
+            // Classify surface type based on normal angle with up vector
+            let angle_with_up = surface_normal.dot(Vec3::Y).acos();
+            
+            if angle_with_up <= MAX_WALKABLE_ANGLE {
+                // Walkable surface - project movement along the slope
+                remaining_movement = project_on_plane(
+                    movement_direction * remaining_distance, 
+                    surface_normal
+                );
+            } else {
+                // Wall or steep slope - slide along the surface
+                remaining_movement = project_on_plane(
+                    movement_direction * remaining_distance, 
+                    surface_normal
+                );
+            }
+            
+            // Reduce remaining movement slightly to prevent infinite bouncing
+            remaining_movement *= 0.98;
+            
+            // Debug output for slope detection
+            if iteration == 0 { // Only log first collision to avoid spam
+                let angle_degrees = angle_with_up * 180.0 / std::f32::consts::PI;
+                if angle_degrees > 5.0 {
+                    println!("SLIDE DEBUG: hit surface at {:.1}° angle, sliding with {:.2} remaining movement", 
+                             angle_degrees, remaining_movement.length());
+                }
+            }
+        } else {
+            // No collision - complete the remaining movement
+            position += remaining_movement;
+            break;
+        }
     }
+
+    position
+}
+
+/// Project a vector onto a plane defined by its normal
+/// This is the core of the sliding algorithm - removes the component perpendicular to the surface
+fn project_on_plane(vector: Vec3, plane_normal: Vec3) -> Vec3 {
+    vector - plane_normal * vector.dot(plane_normal)
 }
 
 /// Check if character is on ground using downward raycast
@@ -227,6 +303,45 @@ fn is_grounded(pos: Vec3, spatial_query: &SpatialQuery, player_entity: Entity, c
     } else {
         false
     }
+}
+
+/// Apply ground snapping to keep character smoothly following terrain contours
+/// This prevents floating gaps when moving over uneven terrain and slopes
+fn apply_ground_snapping(position: Vec3, spatial_query: &SpatialQuery, player_entity: Entity, children: &Children) -> Vec3 {
+    const SNAP_DISTANCE: f32 = 0.3; // Maximum distance to snap to ground
+    const MIN_SNAP_DISTANCE: f32 = 0.05; // Minimum gap before snapping kicks in
+    const MAX_WALKABLE_ANGLE: f32 = 45.0_f32.to_radians(); // 45 degrees
+    
+    // Create filter to exclude player entity AND all child colliders
+    let mut excluded_entities = vec![player_entity];
+    for child in children.iter() {
+        excluded_entities.push(child);
+    }
+    let filter = SpatialQueryFilter::default().with_excluded_entities(excluded_entities);
+    
+    // Cast downward from player position
+    if let Some(hit) = spatial_query.cast_ray(
+        position,
+        Dir3::NEG_Y,
+        SNAP_DISTANCE,
+        true,
+        &filter
+    ) {
+        // Check if the surface is walkable
+        let angle_with_up = hit.normal.dot(Vec3::Y).acos();
+        
+        if angle_with_up <= MAX_WALKABLE_ANGLE {
+            // Surface is walkable, check if we need to snap
+            if hit.distance > MIN_SNAP_DISTANCE && hit.distance <= SNAP_DISTANCE {
+                // Snap to ground
+                let snap_adjustment = hit.distance - MIN_SNAP_DISTANCE;
+                return position - Vec3::Y * snap_adjustment;
+            }
+        }
+    }
+    
+    // No snapping needed or possible
+    position
 }
 
 /// Apply gravity and handle vertical movement for kinematic character (jumping/falling)

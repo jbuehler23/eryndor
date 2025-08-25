@@ -3,7 +3,7 @@ use avian3d::prelude::*;
 use crate::components::Player;
 use crate::utils::{TerrainHeightSampler};
 use crate::systems::terrain_simple::sample_terrain_height;
-use crate::systems::character_controller::CharacterControllerState;
+use crate::components::PlayerMovementState;
 
 /// Debug system for collision and terrain interaction analysis
 /// Logs player position, velocity, and terrain height for debugging floating issues
@@ -31,7 +31,7 @@ pub fn debug_player_collision(
     mut debug_config: ResMut<CollisionDebugConfig>,
     terrain_sampler: Option<Res<TerrainHeightSampler>>,
     gravity: Res<Gravity>,
-    player_query: Query<(Entity, &Transform, Option<&LinearVelocity>, Option<&CharacterControllerState>, Option<&RigidBody>, Option<&Collider>), With<Player>>,
+    player_query: Query<(Entity, &Transform, Option<&LinearVelocity>, Option<&PlayerMovementState>, Option<&RigidBody>, Option<&Collider>), With<Player>>,
     children_query: Query<&Children>,
     collider_query: Query<&Collider>,
 ) {
@@ -69,9 +69,13 @@ pub fn debug_player_collision(
     // Calculate how far above/below terrain the player is
     let height_diff = player_pos.y - terrain_height;
     
-    // Use enhanced character controller velocity if available, otherwise fall back to physics velocity
-    let velocity = if let Some(controller) = controller_state {
-        Vec3::new(controller.velocity.x, controller.vertical_velocity, controller.velocity.z)
+    // Use player movement state velocity if available, otherwise fall back to physics velocity
+    let velocity = if let Some(movement_state) = controller_state {
+        Vec3::new(
+            movement_state.current_direction.x * movement_state.current_speed,
+            movement_state.vertical_velocity,
+            movement_state.current_direction.z * movement_state.current_speed
+        )
     } else if let Some(linear_vel) = linear_velocity {
         **linear_vel
     } else {
@@ -94,12 +98,14 @@ pub fn debug_player_collision(
     info!("   Movement State: Horizontal={}, Falling={}, Rising={}", 
           is_moving_horizontally, is_falling, is_rising);
     
-    // Enhanced character controller debug info
-    if let Some(controller) = controller_state {
-        info!("   Controller State: {:?}", controller.movement_state);
-        info!("   Is Grounded: {}", controller.is_grounded);
-        info!("   Ground Normal: ({:.2}, {:.2}, {:.2})", 
-              controller.ground_normal.x, controller.ground_normal.y, controller.ground_normal.z);
+    // Player movement state debug info
+    if let Some(movement_state) = controller_state {
+        info!("   Current Speed: {:.2}", movement_state.current_speed);
+        info!("   Target Speed: {:.2}", movement_state.target_speed);
+        info!("   Current Direction: ({:.2}, {:.2}, {:.2})",
+              movement_state.current_direction.x, movement_state.current_direction.y, movement_state.current_direction.z);
+        info!("   Is Jumping: {}", movement_state.is_jumping);
+        info!("   Vertical Velocity: {:.2}", movement_state.vertical_velocity);
     }
     
     // Check for child colliders

@@ -226,39 +226,79 @@ impl CollisionSystem {
         Self::project_on_plane(slide_direction, normal).normalize()
     }
 
-    /// Ground detection using downward raycast
+    /// Enhanced ground detection using shape casting and multiple probes
     pub fn is_grounded(
         position: Vec3,
         spatial_query: &SpatialQuery,
         config: &CharacterControllerConfig,
         excluded_entities: &[Entity],
     ) -> (bool, Option<CollisionResult>) {
-        let ray_origin = position;
-        let ray_direction = Dir3::NEG_Y;
-        let max_distance = config.collision.capsule_height * 0.5 + 0.1; // Just below character
+        // Use shape casting for more reliable ground detection
+        Self::shape_based_ground_detection(position, spatial_query, config, excluded_entities)
+    }
 
+    /// Shape-based ground detection using multiple probe points
+    fn shape_based_ground_detection(
+        position: Vec3,
+        spatial_query: &SpatialQuery,
+        config: &CharacterControllerConfig,
+        excluded_entities: &[Entity],
+    ) -> (bool, Option<CollisionResult>) {
+        let capsule_radius = config.collision.capsule_radius;
+        let capsule_height = config.collision.capsule_height;
+        let ground_snap_distance = config.advanced.ground_snap_distance;
+        
+        // Define multiple probe points for better edge detection
+        let probe_points = vec![
+            position, // Center
+            position + Vec3::new(capsule_radius * 0.7, 0.0, 0.0), // Right
+            position + Vec3::new(-capsule_radius * 0.7, 0.0, 0.0), // Left  
+            position + Vec3::new(0.0, 0.0, capsule_radius * 0.7), // Forward
+            position + Vec3::new(0.0, 0.0, -capsule_radius * 0.7), // Back
+        ];
+
+        let ray_direction = Dir3::NEG_Y;
+        let max_distance = capsule_height * 0.5 + ground_snap_distance;
+        
         let filter = SpatialQueryFilter::default()
             .with_excluded_entities(excluded_entities.to_vec());
 
-        if let Some(hit) = spatial_query.cast_ray(
-            ray_origin,
-            ray_direction,
-            max_distance,
-            true,
-            &filter,
-        ) {
-            let collision_result = CollisionResult {
-                hit: true,
-                normal: hit.normal,
-                distance: hit.distance,
-                point: ray_origin + ray_direction.as_vec3() * hit.distance,
-                slide_vector: Vec3::ZERO,
-                is_walkable: Self::is_surface_walkable(&hit.normal, config),
-            };
+        let mut best_hit: Option<CollisionResult> = None;
+        let mut closest_distance = f32::MAX;
+        
+        // Test each probe point
+        for probe_origin in probe_points {
+            if let Some(hit) = spatial_query.cast_ray(
+                probe_origin,
+                ray_direction,
+                max_distance,
+                true,
+                &filter,
+            ) {
+                // Only consider walkable surfaces
+                if Self::is_surface_walkable(&hit.normal, config) {
+                    if hit.distance < closest_distance {
+                        closest_distance = hit.distance;
+                        best_hit = Some(CollisionResult {
+                            hit: true,
+                            normal: hit.normal,
+                            distance: hit.distance,
+                            point: probe_origin + ray_direction.as_vec3() * hit.distance,
+                            slide_vector: Vec3::ZERO,
+                            is_walkable: true,
+                        });
+                    }
+                }
+            }
+        }
 
-            // Consider grounded if we hit something close enough and it's walkable
-            let is_grounded = hit.distance <= config.collision.capsule_height * 0.5 + 0.05
-                && collision_result.is_walkable;
+        if let Some(collision_result) = best_hit {
+            // Enhanced grounding logic with ground snapping
+            let ground_threshold = capsule_height * 0.5 + 0.1; // Base threshold
+            let snap_threshold = capsule_height * 0.5 + ground_snap_distance; // Snap threshold
+            
+            let is_grounded = collision_result.distance <= ground_threshold ||
+                              (collision_result.distance <= snap_threshold && collision_result.is_walkable);
 
             (is_grounded, Some(collision_result))
         } else {

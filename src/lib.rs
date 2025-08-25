@@ -27,14 +27,12 @@ impl Plugin for EryndorPlugin {
             .add_plugins(avian3d::debug_render::PhysicsDebugPlugin::default()) // Enable collision shape visualization
             .insert_resource(Gravity(Vec3::NEG_Y * 9.81)) // Earth-like gravity
             
-            // Character controller - Custom Avian3D kinematic controller (industry standard)
+            // Character controller - Simple MMO-style kinematic controller
             
             // Resources - Global state
             .insert_resource(load_config())
             .init_resource::<InputResource>()
             .init_resource::<CollisionDebugConfig>() // Debug collision interaction
-            .insert_resource(CharacterControllerConfig::mmo_optimized())
-            .init_resource::<CharacterControllerDebugConfig>()
             
             // States - Game flow control
             .init_state::<GameState>()
@@ -45,7 +43,7 @@ impl Plugin for EryndorPlugin {
                 setup_ui,
                 load_initial_assets,
                 setup_animation_assets,
-                setup_character_controller, // Initialize enhanced character controller
+                // setup_character_controller, // Not needed for simple kinematic controller
                 // setup_terrain, // TEMPORARILY DISABLED: Complex terrain system with physics mismatch
                 setup_simple_terrain, // TESTING: Clean terrain system with perfect physics alignment
                 // setup_biomes.after(setup_terrain), // TEMPORARILY DISABLED: Depends on complex terrain system
@@ -53,18 +51,16 @@ impl Plugin for EryndorPlugin {
             ))
             .add_systems(Update, (
                 spawn_player_when_assets_loaded.after(load_initial_assets),
-                setup_character_controller.after(spawn_player_when_assets_loaded), // Setup controller after player spawn
                 handle_input,
                 toggle_collision_debug, // F3 to toggle collision debug
-                toggle_character_controller_debug, // F4-F7 for enhanced controller debug
-                enhanced_character_controller.after(handle_input), // New enhanced controller
-                update_animation_states.after(enhanced_character_controller),
+                kinematic_character_controller.after(handle_input), // Simple MMO-style controller
+                update_animation_states.after(kinematic_character_controller),
                 setup_knight_animations_when_ready, // New system to setup animations when scene loads
                 play_animations.after(update_animation_states),
-                update_camera.after(enhanced_character_controller),
+                update_camera.after(kinematic_character_controller),
                 update_ui,
                 debug_animation_state.after(update_animation_states),
-                debug_player_collision.after(enhanced_character_controller), // Debug player-terrain collision
+                debug_player_collision.after(kinematic_character_controller), // Debug player-terrain collision
                 check_asset_loading,
                 // spawn_world_objects.after(load_world_object_assets).after(setup_biomes), // TEMPORARILY DISABLED: Depends on biomes
                 update_config_system,
@@ -74,8 +70,6 @@ impl Plugin for EryndorPlugin {
             // Debug systems - Only in debug builds
             .add_systems(Update, (
                 debug_info,
-                debug_character_controller_visualization, // Enhanced character controller debug
-                debug_character_controller_info,
                 collect_performance_metrics,
                 // debug_biome_visualization, // TEMPORARILY DISABLED: Depends on biomes  
                 debug_terrain_alignment, // Debug the simplified terrain height system

@@ -9,6 +9,7 @@ pub struct CharacterControllerConfig {
     pub slopes: SlopeConfig,
     pub step_up: StepUpConfig,
     pub collision: CollisionConfig,
+    pub advanced: AdvancedConfig,
 }
 
 impl Default for CharacterControllerConfig {
@@ -19,6 +20,7 @@ impl Default for CharacterControllerConfig {
             slopes: SlopeConfig::default(),
             step_up: StepUpConfig::default(),
             collision: CollisionConfig::default(),
+            advanced: AdvancedConfig::default(),
         }
     }
 }
@@ -131,6 +133,21 @@ pub struct CollisionConfig {
     pub capsule_height: f32,
 }
 
+/// Advanced character controller features
+#[derive(Clone, Debug)]
+pub struct AdvancedConfig {
+    /// Coyote time duration in seconds (allows jumping after leaving ground)
+    pub coyote_time_duration: f32,
+    /// Ground snapping distance for smooth terrain following
+    pub ground_snap_distance: f32,
+    /// Number of frames to buffer grounded state changes
+    pub ground_state_buffer_frames: u32,
+    /// Enable ground snapping feature
+    pub enable_ground_snapping: bool,
+    /// Enable coyote time feature
+    pub enable_coyote_time: bool,
+}
+
 impl Default for CollisionConfig {
     fn default() -> Self {
         Self {
@@ -139,6 +156,18 @@ impl Default for CollisionConfig {
             surface_tolerance: 0.01,
             capsule_radius: 0.4,
             capsule_height: 1.8,
+        }
+    }
+}
+
+impl Default for AdvancedConfig {
+    fn default() -> Self {
+        Self {
+            coyote_time_duration: 0.15, // 150ms coyote time
+            ground_snap_distance: 0.3, // 30cm ground snapping
+            ground_state_buffer_frames: 3, // 3 frames of buffering
+            enable_ground_snapping: true,
+            enable_coyote_time: true,
         }
     }
 }
@@ -156,7 +185,7 @@ impl CharacterControllerConfig {
                 turn_speed: 30.0,
             },
             slopes: SlopeConfig {
-                max_walkable_angle: std::f32::consts::PI / 4.5, // Slightly steeper: ~40°
+                max_walkable_angle: std::f32::consts::PI / 3.5, // Steeper: ~51° to handle 45.7° slopes
                 uphill_speed_multiplier: 0.9, // Less penalty for better MMO feel
                 downhill_speed_multiplier: 1.1, // Less boost for stability
                 ..Default::default()
@@ -164,6 +193,13 @@ impl CharacterControllerConfig {
             step_up: StepUpConfig {
                 max_step_height: 0.4, // Higher step-up for varied terrain
                 ..Default::default()
+            },
+            advanced: AdvancedConfig {
+                coyote_time_duration: 0.2, // Longer coyote time for MMO feel
+                ground_snap_distance: 0.4, // More aggressive ground snapping
+                ground_state_buffer_frames: 5, // More buffering for stability
+                enable_ground_snapping: true,
+                enable_coyote_time: true,
             },
             ..Default::default()
         }

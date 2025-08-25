@@ -13,6 +13,11 @@ pub struct CharacterControllerState {
     pub vertical_velocity: f32,
     pub last_ground_position: Vec3,
     pub movement_state: MovementState,
+    // Coyote time and state buffering
+    pub coyote_time_remaining: f32,
+    pub ground_buffer_frames: u32,
+    pub last_grounded_frame: u32,
+    pub can_jump: bool,
 }
 
 impl Default for CharacterControllerState {
@@ -24,6 +29,10 @@ impl Default for CharacterControllerState {
             vertical_velocity: 0.0,
             last_ground_position: Vec3::ZERO,
             movement_state: MovementState::Idle,
+            coyote_time_remaining: 0.0,
+            ground_buffer_frames: 0,
+            last_grounded_frame: 0,
+            can_jump: false,
         }
     }
 }
@@ -105,10 +114,14 @@ pub fn enhanced_character_controller(
         }
     }
 
-    controller_state.is_grounded = is_grounded;
-    if let Some(ground_result) = ground_info {
-        controller_state.ground_normal = ground_result.normal;
-    }
+    // Update ground state with buffering and coyote time
+    update_ground_state_with_coyote_time(
+        &mut controller_state,
+        is_grounded,
+        ground_info,
+        &config,
+        dt,
+    );
 
     // Handle mouselook rotation
     if input.mouse_right_held {
@@ -167,17 +180,20 @@ pub fn enhanced_character_controller(
                  desired_movement.length(), input.up, target_speed);
     }
 
-    // Handle jumping
+    // Handle jumping with coyote time
     if input.down {
-        println!("DEBUG JUMP: space pressed - is_jumping={}, is_grounded={}", 
-                 movement_state.is_jumping, controller_state.is_grounded);
+        println!("DEBUG JUMP: space pressed - is_jumping={}, can_jump={}, grounded={}, coyote_time={:.3}", 
+                 movement_state.is_jumping, controller_state.can_jump, controller_state.is_grounded, controller_state.coyote_time_remaining);
     }
-    if input.down && !movement_state.is_jumping && controller_state.is_grounded {
+    if input.down && !movement_state.is_jumping && controller_state.can_jump {
         let jump_velocity = (2.0 * 9.81 * config.air.jump_height).sqrt();
         controller_state.vertical_velocity = jump_velocity;
         movement_state.is_jumping = true;
         controller_state.movement_state = MovementState::Jumping;
-        println!("DEBUG JUMP: Jump initiated with velocity={}", jump_velocity);
+        // Consume coyote time
+        controller_state.coyote_time_remaining = 0.0;
+        controller_state.can_jump = false;
+        println!("DEBUG JUMP: Jump initiated with velocity={} (coyote time used)", jump_velocity);
     }
 
     // Apply movement based on grounded state
@@ -268,8 +284,14 @@ fn handle_ground_movement(
             .lerp(desired_velocity.normalize(), direction_lerp_speed.clamp(0.0, 1.0));
     }
 
-    // Calculate movement delta
-    let current_velocity = movement_state.current_direction * effective_speed;
+    // Calculate movement delta with slope projection
+    let mut current_velocity = movement_state.current_direction * effective_speed;
+    
+    // Project velocity along slope for smooth terrain following
+    if controller_state.is_grounded && config.advanced.enable_ground_snapping {
+        current_velocity = project_velocity_on_slope(current_velocity, controller_state.ground_normal);
+    }
+    
     let movement_delta = current_velocity * dt;
 
     if movement_delta.length() > 0.001 {
@@ -420,6 +442,67 @@ fn calculate_slope_modifier(ground_normal: Vec3, movement_direction: Vec3, confi
     } else {
         // Perpendicular to slope
         1.0
+    }
+}
+
+/// Project velocity onto slope surface for smooth terrain following
+fn project_velocity_on_slope(velocity: Vec3, ground_normal: Vec3) -> Vec3 {
+    // Only project horizontal movement, preserve intended direction
+    let horizontal_velocity = Vec3::new(velocity.x, 0.0, velocity.z);
+    
+    if horizontal_velocity.length() < 0.001 {
+        return velocity; // No horizontal movement to project
+    }
+    
+    // Project horizontal velocity onto the slope plane
+    let projected_horizontal = horizontal_velocity - ground_normal * horizontal_velocity.dot(ground_normal);
+    
+    // Preserve vertical component (jumping, falling)
+    Vec3::new(projected_horizontal.x, velocity.y, projected_horizontal.z)
+}
+
+/// Update ground state with coyote time and buffering
+fn update_ground_state_with_coyote_time(
+    controller_state: &mut CharacterControllerState,
+    is_grounded: bool,
+    ground_info: Option<CollisionResult>,
+    config: &CharacterControllerConfig,
+    dt: f32,
+) {
+    // Update ground normal if we have ground info
+    if let Some(ground_result) = ground_info {
+        controller_state.ground_normal = ground_result.normal;
+    }
+
+    let was_grounded = controller_state.is_grounded;
+    controller_state.is_grounded = is_grounded;
+
+    // Handle coyote time
+    if config.advanced.enable_coyote_time {
+        if is_grounded {
+            // Reset coyote time when grounded
+            controller_state.coyote_time_remaining = config.advanced.coyote_time_duration;
+            controller_state.can_jump = true;
+            controller_state.last_ground_position = controller_state.last_ground_position; // Could update this
+        } else {
+            // Reduce coyote time when airborne
+            controller_state.coyote_time_remaining = (controller_state.coyote_time_remaining - dt).max(0.0);
+            controller_state.can_jump = controller_state.coyote_time_remaining > 0.0;
+        }
+    } else {
+        // Standard jumping without coyote time
+        controller_state.can_jump = is_grounded;
+    }
+
+    // Ground state buffering could be added here for further smoothing
+    if config.advanced.ground_state_buffer_frames > 0 {
+        if is_grounded {
+            controller_state.ground_buffer_frames = config.advanced.ground_state_buffer_frames;
+        } else if controller_state.ground_buffer_frames > 0 {
+            controller_state.ground_buffer_frames -= 1;
+            // Keep grounded state for buffer frames
+            controller_state.is_grounded = controller_state.ground_buffer_frames > 0;
+        }
     }
 }
 
