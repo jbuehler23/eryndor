@@ -33,6 +33,7 @@ impl Plugin for EryndorPlugin {
             .insert_resource(load_config())
             .init_resource::<InputResource>()
             .init_resource::<CollisionDebugConfig>() // Debug collision interaction
+            .init_resource::<StatsConfig>() // Character stats system configuration
             
             // States - Game flow control
             .init_state::<GameState>()
@@ -54,11 +55,17 @@ impl Plugin for EryndorPlugin {
                 handle_input,
                 toggle_collision_debug, // F3 to toggle collision debug
                 kinematic_character_controller.after(handle_input), // Simple MMO-style controller
+                // Character stats systems
+                stats_regeneration_system, // Natural health/mana/stamina regeneration
+                recalculate_player_stats_system, // Update stats when attributes change
+                debug_player_stats_system, // F5 to toggle stats debug
+                // Animation and camera systems
                 update_animation_states.after(kinematic_character_controller),
                 setup_knight_animations_when_ready, // New system to setup animations when scene loads
                 play_animations.after(update_animation_states),
                 update_camera.after(kinematic_character_controller),
                 update_ui,
+                update_stats_ui, // Update HP/MP/Stamina bars
                 debug_animation_state.after(update_animation_states),
                 debug_player_collision.after(kinematic_character_controller), // Debug player-terrain collision
                 check_asset_loading,

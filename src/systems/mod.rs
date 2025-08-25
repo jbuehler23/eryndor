@@ -12,6 +12,7 @@ pub mod world_objects;
 pub mod biomes;
 pub mod collision_debug;
 pub mod character_controller;
+pub mod stats;
 
 pub use camera::*;
 pub use input::*;
@@ -27,3 +28,4 @@ pub use world_objects::*;
 pub use biomes::*;
 pub use collision_debug::*;
 pub use character_controller::*;
+pub use stats::*;
