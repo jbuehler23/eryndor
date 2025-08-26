@@ -1,0 +1,148 @@
+{
+  "slashing": {
+    "display_name": "Slashing",
+    "description": "Sharp blade damage effective against light armor",
+    "damage_category": "Physical",
+    "color_hex": "#C0392B",
+    "resistances": {
+      "light_armor": 0.1,
+      "medium_armor": 0.2,
+      "heavy_armor": 0.4
+    },
+    "special_effects": ["bleeding_chance"]
+  },
+  "piercing": {
+    "display_name": "Piercing",
+    "description": "Pointed damage that bypasses armor gaps",
+    "damage_category": "Physical",
+    "color_hex": "#8E44AD",
+    "resistances": {
+      "light_armor": 0.05,
+      "medium_armor": 0.15,
+      "heavy_armor": 0.25
+    },
+    "special_effects": ["armor_penetration"]
+  },
+  "bludgeoning": {
+    "display_name": "Bludgeoning",
+    "description": "Blunt force trauma effective against heavy armor",
+    "damage_category": "Physical",
+    "color_hex": "#7F8C8D",
+    "resistances": {
+      "light_armor": 0.3,
+      "medium_armor": 0.2,
+      "heavy_armor": 0.1
+    },
+    "special_effects": ["stun_chance"]
+  },
+  "fire": {
+    "display_name": "Fire",
+    "description": "Burning damage that can spread and ignite",
+    "damage_category": "Elemental",
+    "color_hex": "#E74C3C",
+    "resistances": {
+      "fire_resistance": 0.5,
+      "ice_weakness": -0.5
+    },
+    "special_effects": ["burning_dot", "environmental_ignition"]
+  },
+  "ice": {
+    "display_name": "Ice",
+    "description": "Freezing damage that slows and can shatter",
+    "damage_category": "Elemental",
+    "color_hex": "#3498DB",
+    "resistances": {
+      "ice_resistance": 0.5,
+      "fire_weakness": -0.5
+    },
+    "special_effects": ["slowing_effect", "freeze_chance"]
+  },
+  "lightning": {
+    "display_name": "Lightning",
+    "description": "Electrical damage that can chain and stun",
+    "damage_category": "Elemental",
+    "color_hex": "#F1C40F",
+    "resistances": {
+      "lightning_resistance": 0.5,
+      "water_weakness": -0.3
+    },
+    "special_effects": ["chain_lightning", "paralysis_chance"]
+  },
+  "shadow": {
+    "display_name": "Shadow",
+    "description": "Dark mystical energy that corrupts and fears",
+    "damage_category": "Mystical",
+    "color_hex": "#2C3E50",
+    "resistances": {
+      "shadow_resistance": 0.5,
+      "holy_weakness": -0.5
+    },
+    "special_effects": ["fear_effect", "healing_reduction"]
+  },
+  "nature": {
+    "display_name": "Nature",
+    "description": "Natural forces including poison and growth",
+    "damage_category": "Mystical",
+    "color_hex": "#27AE60",
+    "resistances": {
+      "nature_resistance": 0.5,
+      "construct_bonus": 0.5
+    },
+    "special_effects": ["poison_dot", "entanglement"]
+  },
+  "arcane": {
+    "display_name": "Arcane",
+    "description": "Pure magical energy that ignores physical defenses",
+    "damage_category": "Mystical",
+    "color_hex": "#9B59B6",
+    "resistances": {
+      "magic_resistance": 0.3
+    },
+    "special_effects": ["mana_burn", "dispel_effects"]
+  },
+  "healing": {
+    "display_name": "Healing",
+    "description": "Restorative energy that mends wounds",
+    "damage_category": "Special",
+    "color_hex": "#2ECC71",
+    "resistances": {
+      "undead_damage": -2.0
+    },
+    "special_effects": ["heal_over_time", "cure_effects"]
+  },
+  "psychic": {
+    "display_name": "Psychic",
+    "description": "Mental attacks that bypass physical defenses",
+    "damage_category": "Special",
+    "color_hex": "#E91E63",
+    "resistances": {
+      "mental_resistance": 0.4,
+      "construct_immunity": 1.0
+    },
+    "special_effects": ["confusion", "mind_control"]
+  },
+  "holy": {
+    "display_name": "Holy",
+    "description": "Divine energy particularly effective against undead",
+    "damage_category": "Special",
+    "color_hex": "#FFC107",
+    "resistances": {
+      "holy_resistance": 0.5,
+      "shadow_weakness": -0.5,
+      "undead_bonus": 1.0
+    },
+    "special_effects": ["turn_undead", "blessing_aura"]
+  },
+  "necrotic": {
+    "display_name": "Necrotic",
+    "description": "Death magic that drains life force",
+    "damage_category": "Special",
+    "color_hex": "#607D8B",
+    "resistances": {
+      "necrotic_resistance": 0.5,
+      "holy_weakness": -0.5,
+      "construct_immunity": 1.0
+    },
+    "special_effects": ["life_drain", "stat_reduction"]
+  }
+}

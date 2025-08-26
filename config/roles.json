@@ -1,0 +1,106 @@
+{
+  "tank": {
+    "display_name": "Tank",
+    "description": "Defensive specialist focused on protecting allies and controlling enemies",
+    "primary_skills": ["swordsmanship", "shield_defense", "heavy_armor"],
+    "secondary_skills": ["axe_mastery", "mace_skill", "medium_armor"],
+    "recommended_weapons": ["sword", "shield", "axe", "mace"],
+    "recommended_armor": "heavy",
+    "role_bonuses": {
+      "threat_generation": 1.5,
+      "damage_reduction": 0.1,
+      "health_bonus": 1.25
+    }
+  },
+  "healer": {
+    "display_name": "Healer",
+    "description": "Support specialist focused on healing and protecting allies",
+    "primary_skills": ["restoration", "light_armor"],
+    "secondary_skills": ["divination", "alchemy", "medium_armor"],
+    "recommended_weapons": ["restoration_staff"],
+    "recommended_armor": "light",
+    "role_bonuses": {
+      "healing_power": 1.3,
+      "mana_bonus": 1.2,
+      "mana_regeneration": 1.4
+    }
+  },
+  "dps": {
+    "display_name": "DPS",
+    "description": "Damage specialist focused on eliminating enemies efficiently",
+    "primary_skills": ["swordsmanship", "fire_magic", "archery"],
+    "secondary_skills": ["axe_mastery", "ice_magic", "lightning_magic", "dagger_mastery"],
+    "recommended_weapons": ["sword", "two_handed_sword", "fire_staff", "bow", "dagger"],
+    "recommended_armor": "medium",
+    "role_bonuses": {
+      "damage_bonus": 1.2,
+      "critical_chance": 0.05,
+      "attack_speed": 1.1
+    }
+  },
+  "support": {
+    "display_name": "Support",
+    "description": "Utility specialist focused on crafting and providing useful services",
+    "primary_skills": ["smithing", "alchemy", "enchanting", "cooking"],
+    "secondary_skills": ["medium_armor", "light_armor", "dagger_mastery"],
+    "recommended_weapons": ["hammer", "dagger"],
+    "recommended_armor": "medium",
+    "role_bonuses": {
+      "crafting_success": 1.2,
+      "resource_efficiency": 1.15,
+      "durability_bonus": 1.3
+    }
+  },
+  "utility": {
+    "display_name": "Utility",
+    "description": "Exploration specialist focused on mobility and problem-solving",
+    "primary_skills": ["stealth", "athletics", "lockpicking", "pickpocketing"],
+    "secondary_skills": ["dagger_mastery", "light_armor", "archery"],
+    "recommended_weapons": ["dagger", "bow"],
+    "recommended_armor": "light",
+    "role_bonuses": {
+      "movement_speed": 1.2,
+      "stealth_effectiveness": 1.4,
+      "skill_success_rate": 1.15
+    }
+  },
+  "battle_mage": {
+    "display_name": "Battle Mage",
+    "description": "Hybrid combatant blending martial and magical abilities",
+    "primary_skills": ["swordsmanship", "fire_magic", "ice_magic"],
+    "secondary_skills": ["lightning_magic", "medium_armor", "arcane_magic"],
+    "recommended_weapons": ["sword", "fire_staff", "ice_staff"],
+    "recommended_armor": "medium",
+    "role_bonuses": {
+      "spell_sword_synergy": 1.15,
+      "mana_on_melee_hit": 0.1,
+      "elemental_weapon_chance": 0.2
+    }
+  },
+  "ranger": {
+    "display_name": "Ranger",
+    "description": "Wilderness expert combining ranged combat with nature skills",
+    "primary_skills": ["archery", "nature_magic", "stealth"],
+    "secondary_skills": ["athletics", "alchemy", "light_armor"],
+    "recommended_weapons": ["bow", "dagger"],
+    "recommended_armor": "light",
+    "role_bonuses": {
+      "ranged_accuracy": 1.15,
+      "environmental_resistance": 0.2,
+      "tracking_ability": 1.5
+    }
+  },
+  "paladin": {
+    "display_name": "Paladin",
+    "description": "Holy warrior combining combat prowess with divine magic",
+    "primary_skills": ["swordsmanship", "restoration", "heavy_armor"],
+    "secondary_skills": ["shield_defense", "mace_skill", "divination"],
+    "recommended_weapons": ["sword", "mace", "shield", "restoration_staff"],
+    "recommended_armor": "heavy",
+    "role_bonuses": {
+      "undead_damage": 1.5,
+      "healing_on_crit": 0.15,
+      "aura_effects": 1.2
+    }
+  }
+}

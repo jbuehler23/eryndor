@@ -510,17 +510,25 @@ This document serves as a comprehensive tracker of all game systems within Erynd
 ### Configuration System
 
 **Status**: ✅ Implemented  
-**Technology**: JSON-based with validation  
-**Location**: `src/systems/progression_config.rs`, `config/` directory
+**Technology**: JSON-based with validation and enum compatibility  
+**Location**: `src/systems/progression_config.rs`, `src/resources/progression_config.rs`, `config/` directory
 
 **Components**:
-- JSON configuration for skills, weapons, and progression
-- Runtime configuration loading and validation
+- JSON configuration for skills, weapons, damage types, and roles
+- Runtime configuration loading and validation with fallback
 - Schema validation and error reporting
-- Hot-reloading for development iteration
+- Enum compatibility layer bridging JSON config with hardcoded types
+- Extension methods for seamless config integration
 
-**Dependencies**: File system, Validation systems  
-**Integration Points**: All configurable systems, Balance updates, Content patches
+**Dependencies**: Serde JSON, File system  
+**Integration Points**: Character progression, Combat system, Equipment system, Balance updates
+
+**Configuration Files**:
+- `config/skills.json` - Complete skill definitions with abilities by level
+- `config/weapons.json` - Weapon stats, damage types, and skill associations  
+- `config/damage_types.json` - Damage type properties and resistances
+- `config/roles.json` - Role definitions with skill and equipment recommendations
+- `config/progression.json` - Experience curves and progression parameters
 
 ---
 

@@ -1,0 +1,402 @@
+{
+  "swordsmanship": {
+    "display_name": "Swordsmanship",
+    "description": "The art of blade combat - balanced offense and defense",
+    "category": "Melee Weapons",
+    "associated_weapons": ["sword", "two_handed_sword"],
+    "role_categories": ["tank", "dps"],
+    "max_level": 50,
+    "abilities": {
+      "1": [
+        {
+          "name": "Basic Slash",
+          "ability_type": "Active",
+          "description": "Standard melee attack - foundation of swordsmanship",
+          "requirements": []
+        }
+      ],
+      "3": [
+        {
+          "name": "Combat Awareness",
+          "ability_type": "Passive",
+          "description": "+2% accuracy with swords",
+          "requirements": []
+        }
+      ],
+      "5": [
+        {
+          "name": "Heavy Strike",
+          "ability_type": "Active",
+          "description": "Powerful attack with +50% damage, 4s cooldown",
+          "requirements": []
+        }
+      ],
+      "7": [
+        {
+          "name": "Blade Maintenance",
+          "ability_type": "Passive",
+          "description": "Swords last 15% longer before needing repair",
+          "requirements": []
+        }
+      ],
+      "10": [
+        {
+          "name": "Parry",
+          "ability_type": "Active",
+          "description": "25% chance to block melee attack, triggers riposte opportunity",
+          "requirements": ["Trainer Required"]
+        }
+      ],
+      "15": [
+        {
+          "name": "Blade Flurry",
+          "ability_type": "Active",
+          "description": "Cleave attack hitting up to 3 enemies in front, 8s cooldown",
+          "requirements": []
+        }
+      ],
+      "20": [
+        {
+          "name": "Riposte",
+          "ability_type": "Active",
+          "description": "Counter-attack after successful parry",
+          "requirements": []
+        },
+        {
+          "name": "Keen Edge",
+          "ability_type": "Passive",
+          "description": "+5% critical hit chance",
+          "requirements": []
+        }
+      ],
+      "25": [
+        {
+          "name": "Sword Mastery I",
+          "ability_type": "Passive",
+          "description": "+8% damage with all swords, +5% attack speed",
+          "requirements": []
+        }
+      ],
+      "30": [
+        {
+          "name": "Whirlwind Strike",
+          "ability_type": "Active",
+          "description": "360° attack hitting all surrounding enemies, 12s cooldown",
+          "requirements": ["Quest Required"]
+        }
+      ],
+      "40": [
+        {
+          "name": "Sword Mastery II",
+          "ability_type": "Passive",
+          "description": "+15% damage with all swords, +10% attack speed, +10% parry chance",
+          "requirements": []
+        }
+      ],
+      "50": [
+        {
+          "name": "Blade Storm",
+          "ability_type": "Active",
+          "description": "Ultimate sword technique - devastating combo attack",
+          "requirements": ["Master Trainer Required"]
+        }
+      ]
+    }
+  },
+  "fire_magic": {
+    "display_name": "Fire Magic",
+    "description": "Harness the destructive power of flame",
+    "category": "Magic Schools",
+    "associated_weapons": ["fire_staff"],
+    "role_categories": ["dps"],
+    "max_level": 50,
+    "abilities": {
+      "1": [
+        {
+          "name": "Spark",
+          "ability_type": "Active",
+          "description": "Basic fire projectile with low mana cost",
+          "requirements": []
+        }
+      ],
+      "5": [
+        {
+          "name": "Firebolt",
+          "ability_type": "Active",
+          "description": "Moderate fire damage projectile, 3s cooldown",
+          "requirements": []
+        }
+      ],
+      "10": [
+        {
+          "name": "Fire Weapon",
+          "ability_type": "Active",
+          "description": "Imbue weapon with fire damage for 60 seconds",
+          "requirements": []
+        }
+      ],
+      "15": [
+        {
+          "name": "Flame Burst",
+          "ability_type": "Active",
+          "description": "Area fire damage around caster, 8s cooldown",
+          "requirements": []
+        }
+      ],
+      "20": [
+        {
+          "name": "Wall of Fire",
+          "ability_type": "Active",
+          "description": "Create burning barrier that damages enemies",
+          "requirements": ["Trainer Required"]
+        }
+      ],
+      "25": [
+        {
+          "name": "Fire Mastery I",
+          "ability_type": "Passive",
+          "description": "+10% fire damage, +20% fire resistance",
+          "requirements": []
+        }
+      ],
+      "30": [
+        {
+          "name": "Fireball",
+          "ability_type": "Active",
+          "description": "Explosive projectile with area damage",
+          "requirements": []
+        }
+      ],
+      "40": [
+        {
+          "name": "Phoenix Rising",
+          "ability_type": "Active",
+          "description": "Resurrect with fire damage aura when killed",
+          "requirements": ["Quest Required"]
+        }
+      ],
+      "50": [
+        {
+          "name": "Meteor Storm",
+          "ability_type": "Active",
+          "description": "Rain fire from the sky over large area",
+          "requirements": ["Master Trainer Required"]
+        }
+      ]
+    }
+  },
+  "restoration": {
+    "display_name": "Restoration",
+    "description": "The healing arts - mend wounds and restore vitality",
+    "category": "Magic Schools", 
+    "associated_weapons": ["restoration_staff"],
+    "role_categories": ["healer"],
+    "max_level": 50,
+    "abilities": {
+      "1": [
+        {
+          "name": "Minor Heal",
+          "ability_type": "Active",
+          "description": "Basic healing spell restoring small amount of health",
+          "requirements": []
+        }
+      ],
+      "5": [
+        {
+          "name": "Heal",
+          "ability_type": "Active",
+          "description": "Moderate healing spell, 2s cast time",
+          "requirements": []
+        }
+      ],
+      "10": [
+        {
+          "name": "Regeneration",
+          "ability_type": "Active",
+          "description": "Heal over time effect for 30 seconds",
+          "requirements": []
+        }
+      ],
+      "15": [
+        {
+          "name": "Cure Disease",
+          "ability_type": "Active",
+          "description": "Remove disease and poison effects",
+          "requirements": []
+        }
+      ],
+      "20": [
+        {
+          "name": "Group Heal",
+          "ability_type": "Active",
+          "description": "Heal all nearby allies simultaneously",
+          "requirements": ["Trainer Required"]
+        }
+      ],
+      "25": [
+        {
+          "name": "Healing Mastery I",
+          "ability_type": "Passive",
+          "description": "+15% healing power, -10% mana costs for healing",
+          "requirements": []
+        }
+      ],
+      "30": [
+        {
+          "name": "Greater Heal",
+          "ability_type": "Active",
+          "description": "Powerful single-target heal with long cast time",
+          "requirements": []
+        }
+      ],
+      "40": [
+        {
+          "name": "Guardian Angel",
+          "ability_type": "Active",
+          "description": "Grant ally immunity to damage for 3 seconds",
+          "requirements": ["Quest Required"]
+        }
+      ],
+      "50": [
+        {
+          "name": "Divine Intervention",
+          "ability_type": "Active",
+          "description": "Ultimate healing - restore full health and resources",
+          "requirements": ["Master Trainer Required"]
+        }
+      ]
+    }
+  },
+  "shield_defense": {
+    "display_name": "Shield Defense",
+    "description": "Master of defensive combat with shield and buckler",
+    "category": "Melee Weapons",
+    "associated_weapons": ["shield"],
+    "role_categories": ["tank"],
+    "max_level": 50,
+    "abilities": {
+      "1": [
+        {
+          "name": "Block",
+          "ability_type": "Active",
+          "description": "Raise shield to reduce incoming damage by 50%",
+          "requirements": []
+        }
+      ],
+      "5": [
+        {
+          "name": "Shield Bash",
+          "ability_type": "Active",
+          "description": "Strike with shield, chance to stun enemy",
+          "requirements": []
+        }
+      ],
+      "10": [
+        {
+          "name": "Defensive Stance",
+          "ability_type": "Active",
+          "description": "+25% damage reduction, -25% movement speed",
+          "requirements": []
+        }
+      ],
+      "15": [
+        {
+          "name": "Taunt",
+          "ability_type": "Active",
+          "description": "Force enemy to attack you for 5 seconds",
+          "requirements": []
+        }
+      ],
+      "20": [
+        {
+          "name": "Shield Wall",
+          "ability_type": "Active",
+          "description": "Create protective barrier for nearby allies",
+          "requirements": ["Trainer Required"]
+        }
+      ],
+      "25": [
+        {
+          "name": "Shield Mastery I",
+          "ability_type": "Passive",
+          "description": "+20% block chance, +15% block damage reduction",
+          "requirements": []
+        }
+      ],
+      "30": [
+        {
+          "name": "Counter Attack",
+          "ability_type": "Passive",
+          "description": "Successful blocks have 25% chance to trigger counter-attack",
+          "requirements": []
+        }
+      ],
+      "40": [
+        {
+          "name": "Fortress",
+          "ability_type": "Active",
+          "description": "Become immobile but gain 75% damage reduction",
+          "requirements": ["Quest Required"]
+        }
+      ],
+      "50": [
+        {
+          "name": "Aegis",
+          "ability_type": "Active",
+          "description": "Ultimate defense - absorb all damage for nearby allies",
+          "requirements": ["Master Trainer Required"]
+        }
+      ]
+    }
+  },
+  "heavy_armor": {
+    "display_name": "Heavy Armor",
+    "description": "Training in the heaviest protective equipment",
+    "category": "Armor Skills",
+    "associated_weapons": [],
+    "role_categories": ["tank"],
+    "max_level": 50,
+    "abilities": {
+      "1": [
+        {
+          "name": "Armor Training",
+          "ability_type": "Passive",
+          "description": "Can wear heavy armor without movement penalty",
+          "requirements": []
+        }
+      ],
+      "10": [
+        {
+          "name": "Plate Specialist",
+          "ability_type": "Passive",
+          "description": "+5% damage reduction when wearing full plate armor",
+          "requirements": []
+        }
+      ],
+      "20": [
+        {
+          "name": "Armor Maintenance",
+          "ability_type": "Passive",
+          "description": "Heavy armor lasts 25% longer before needing repair",
+          "requirements": []
+        }
+      ],
+      "30": [
+        {
+          "name": "Damage Reflection",
+          "ability_type": "Passive",
+          "description": "10% of melee damage is reflected back to attacker",
+          "requirements": []
+        }
+      ],
+      "50": [
+        {
+          "name": "Immovable Object",
+          "ability_type": "Passive",
+          "description": "Immunity to knockdown and movement impairing effects",
+          "requirements": []
+        }
+      ]
+    }
+  }
+}
