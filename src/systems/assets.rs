@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy::asset::LoadState;
 use bevy::gltf::GltfAssetLabel;
 use avian3d::prelude::*;
-use crate::components::{Player, PlayerMovementConfig, PlayerMovementState, PlayerStats};
+use crate::components::{Player, PlayerMovementConfig, PlayerMovementState};
 
 // Asset loading resource to track loaded assets
 #[derive(Resource, Default)]
@@ -114,7 +114,11 @@ pub fn spawn_player_when_assets_loaded(
             Player,
             PlayerMovementConfig::default(),
             PlayerMovementState::default(),
-            crate::components::PlayerStats::default(),
+            // V2 Character Progression System
+            crate::components::CharacterLevel::default(),
+            crate::components::CharacterSkills::default(),
+            crate::components::CharacterLoadouts::default(),
+            // Animation and model
             crate::components::AnimationController::default(),
             crate::components::CharacterModel::default(),
             crate::components::KnightAnimationSetup::default(),

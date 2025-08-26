@@ -33,13 +33,15 @@ impl Plugin for EryndorPlugin {
             .insert_resource(load_config())
             .init_resource::<InputResource>()
             .init_resource::<CollisionDebugConfig>() // Debug collision interaction
-            .init_resource::<StatsConfig>() // Character stats system configuration
+            // V1 StatsConfig removed with character progression cleanup
             
             // States - Game flow control
             .init_state::<GameState>()
             
             // Core systems - Order matters for dependencies
             .add_systems(Startup, (
+                load_progression_config, // Load JSON configuration first
+                validate_progression_config_system.after(load_progression_config), // Validate configuration
                 setup_camera, // Then setup camera to look at player
                 setup_ui,
                 load_initial_assets,
@@ -50,26 +52,36 @@ impl Plugin for EryndorPlugin {
                 // setup_biomes.after(setup_terrain), // TEMPORARILY DISABLED: Depends on complex terrain system
                 load_world_object_assets, // Load forest/nature assets
             ))
+            // Core gameplay systems
             .add_systems(Update, (
                 spawn_player_when_assets_loaded.after(load_initial_assets),
                 handle_input,
-                toggle_collision_debug, // F3 to toggle collision debug
-                kinematic_character_controller.after(handle_input), // Simple MMO-style controller
-                // Character stats systems
-                stats_regeneration_system, // Natural health/mana/stamina regeneration
-                recalculate_player_stats_system, // Update stats when attributes change
-                debug_player_stats_system, // F5 to toggle stats debug
-                // Animation and camera systems
+                toggle_collision_debug,
+                kinematic_character_controller.after(handle_input),
+            ))
+            // Character progression systems
+            .add_systems(Update, (
+                character_level_system,
+                skill_usage_system,
+                loadout_management_system,
+                debug_character_v2_system,
+                debug_rested_bonus_system,
+                debug_award_character_experience_system,
+            ))
+            // Animation and camera systems
+            .add_systems(Update, (
                 update_animation_states.after(kinematic_character_controller),
-                setup_knight_animations_when_ready, // New system to setup animations when scene loads
+                setup_knight_animations_when_ready,
                 play_animations.after(update_animation_states),
                 update_camera.after(kinematic_character_controller),
-                update_ui,
-                update_stats_ui, // Update HP/MP/Stamina bars
                 debug_animation_state.after(update_animation_states),
-                debug_player_collision.after(kinematic_character_controller), // Debug player-terrain collision
+            ))
+            // UI and utility systems
+            .add_systems(Update, (
+                update_ui,
+                update_stats_ui,
+                debug_player_collision.after(kinematic_character_controller),
                 check_asset_loading,
-                // spawn_world_objects.after(load_world_object_assets).after(setup_biomes), // TEMPORARILY DISABLED: Depends on biomes
                 update_config_system,
                 save_config_on_exit,
                 log_performance_metrics,
@@ -78,6 +90,7 @@ impl Plugin for EryndorPlugin {
             .add_systems(Update, (
                 debug_info,
                 collect_performance_metrics,
+                debug_progression_config_system, // Debug JSON configuration system
                 // debug_biome_visualization, // TEMPORARILY DISABLED: Depends on biomes  
                 debug_terrain_alignment, // Debug the simplified terrain height system
             ).run_if(in_state(GameState::Debug)));

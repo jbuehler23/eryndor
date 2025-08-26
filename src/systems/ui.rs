@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use crate::{resources::GameConfig, states::GameState, components::{Player, PlayerStats}};
+use crate::{resources::GameConfig, states::GameState, components::{Player, CharacterLevel, CharacterSkills}};
 
 // UI marker components
 #[derive(Component)]
@@ -217,9 +217,10 @@ pub fn debug_info(
     **text = format!("FPS: {:.1}", fps);
 }
 
-// Stats UI update system - updates health, mana, stamina bars and text
+// Stats UI update system - displays basic character level info
+// Note: V2 system focuses on skill progression rather than traditional health/mana bars
 pub fn update_stats_ui(
-    player_query: Query<&PlayerStats, With<Player>>,
+    player_query: Query<(&CharacterLevel, &CharacterSkills), With<Player>>,
     mut health_bar_query: Query<&mut Node, (With<HealthBar>, Without<ManaBar>, Without<StaminaBar>)>,
     mut mana_bar_query: Query<&mut Node, (With<ManaBar>, Without<HealthBar>, Without<StaminaBar>)>,
     mut stamina_bar_query: Query<&mut Node, (With<StaminaBar>, Without<HealthBar>, Without<ManaBar>)>,
@@ -227,38 +228,35 @@ pub fn update_stats_ui(
     mut mana_text_query: Query<&mut Text, (With<ManaText>, Without<HealthText>, Without<StaminaText>)>,
     mut stamina_text_query: Query<&mut Text, (With<StaminaText>, Without<HealthText>, Without<ManaText>)>,
 ) {
-    let Ok(stats) = player_query.single() else {
+    let Ok((character_level, _skills)) = player_query.single() else {
         return; // No player found
     };
     
-    // Update health bar width based on percentage
+    // Display character level progress as health bar for now
     if let Ok(mut health_bar) = health_bar_query.single_mut() {
-        health_bar.width = Val::Percent(stats.health_percentage() * 100.0);
+        health_bar.width = Val::Percent(character_level.level_progress() * 100.0);
     }
     
-    // Update mana bar width based on percentage
+    // Hide mana and stamina bars (not used in V2 system currently)
     if let Ok(mut mana_bar) = mana_bar_query.single_mut() {
-        mana_bar.width = Val::Percent(stats.mana_percentage() * 100.0);
+        mana_bar.width = Val::Percent(0.0);
     }
     
-    // Update stamina bar width based on percentage
     if let Ok(mut stamina_bar) = stamina_bar_query.single_mut() {
-        stamina_bar.width = Val::Percent(stats.stamina_percentage() * 100.0);
+        stamina_bar.width = Val::Percent(0.0);
     }
     
-    // Update health text
+    // Update text to show character level instead
     if let Ok(mut health_text) = health_text_query.single_mut() {
-        **health_text = format!("{:.0} / {:.0}", stats.health, stats.max_health);
+        **health_text = format!("Level {}", character_level.level);
     }
     
-    // Update mana text
     if let Ok(mut mana_text) = mana_text_query.single_mut() {
-        **mana_text = format!("{:.0} / {:.0}", stats.mana, stats.max_mana);
+        **mana_text = "".to_string();
     }
     
-    // Update stamina text
     if let Ok(mut stamina_text) = stamina_text_query.single_mut() {
-        **stamina_text = format!("{:.0} / {:.0}", stats.stamina, stats.max_stamina);
+        **stamina_text = "".to_string();
     }
 }
 

@@ -1,0 +1,174 @@
+{
+  "character_progression": {
+    "max_character_level": 50,
+    "base_experience": 100,
+    "level_exponent": 2.0,
+    "level_multiplier": 200,
+    "formula_description": "level^2 * 100 + level * 200",
+    "experience_curve": {
+      "1": 0,
+      "2": 500,
+      "5": 4500,
+      "10": 30000,
+      "25": 162500,
+      "50": 270500
+    }
+  },
+  "skill_progression": {
+    "max_skill_level": 50,
+    "base_experience": 50,
+    "level_exponent": 1.8,
+    "level_multiplier": 25,
+    "formula_description": "level^1.8 * 50 + level * 25",
+    "rested_bonus": {
+      "multiplier": 1.5,
+      "duration_seconds": 300,
+      "sources": ["inn", "campfire", "guild_hall"]
+    },
+    "experience_curve": {
+      "1": 0,
+      "2": 75,
+      "5": 575,
+      "10": 2475,
+      "25": 18125,
+      "50": 31075
+    }
+  },
+  "milestone_rewards": {
+    "character_level": {
+      "5": {
+        "description": "Unlock medium armor",
+        "rewards": ["equipment_access"]
+      },
+      "10": {
+        "description": "Unlock advanced zones",
+        "rewards": ["zone_access", "trainer_access"]
+      },
+      "15": {
+        "description": "Unlock heavy armor", 
+        "rewards": ["equipment_access"]
+      },
+      "20": {
+        "description": "Unlock master trainers",
+        "rewards": ["trainer_access", "guild_access"]
+      },
+      "25": {
+        "description": "Unlock legendary zones",
+        "rewards": ["zone_access"]
+      },
+      "35": {
+        "description": "Unlock artifact weapons",
+        "rewards": ["equipment_access"]
+      },
+      "50": {
+        "description": "Maximum character development",
+        "rewards": ["prestige_access"]
+      }
+    },
+    "skill_level": {
+      "5": {
+        "description": "Basic mastery bonus",
+        "rewards": ["passive_bonus", "ability_unlock"]
+      },
+      "10": {
+        "description": "Journeyman abilities",
+        "rewards": ["ability_unlock", "equipment_access"]
+      },
+      "15": {
+        "description": "Advanced techniques",
+        "rewards": ["ability_unlock", "passive_bonus"]
+      },
+      "20": {
+        "description": "Expert mastery",
+        "rewards": ["major_passive_bonus", "ability_unlock"]
+      },
+      "25": {
+        "description": "Master level skills",
+        "rewards": ["ability_unlock", "equipment_access"]
+      },
+      "35": {
+        "description": "Grandmaster techniques",
+        "rewards": ["major_passive_bonus", "ability_unlock"]
+      },
+      "50": {
+        "description": "Legendary mastery",
+        "rewards": ["legendary_passive", "ultimate_ability"]
+      }
+    }
+  },
+  "loadout_system": {
+    "max_loadouts": 5,
+    "unlock_progression": {
+      "1": 1,
+      "5": 2,
+      "15": 3,
+      "25": 4,
+      "35": 5
+    },
+    "switching_restrictions": {
+      "allowed_locations": ["inn", "campfire", "guild_hall", "player_home"],
+      "cooldown_seconds": 5,
+      "combat_restriction": true
+    },
+    "components": {
+      "primary_weapon": {
+        "required": true,
+        "description": "Main weapon determining combat style"
+      },
+      "secondary_item": {
+        "required": false,
+        "description": "Shield, off-hand weapon, or magical focus"
+      },
+      "armor_type": {
+        "required": true,
+        "options": ["heavy", "medium", "light"],
+        "description": "Determines defense and role compatibility"
+      },
+      "active_abilities": {
+        "required": true,
+        "count": 8,
+        "description": "Hotbar abilities based on equipped weapons and skills"
+      }
+    }
+  },
+  "experience_sources": {
+    "combat": {
+      "kill_bonus": {
+        "base_experience": 50,
+        "level_scaling": true,
+        "rare_enemy_multiplier": 2.0
+      },
+      "damage_dealt": {
+        "experience_per_damage": 0.1,
+        "skill_specific": true
+      }
+    },
+    "quests": {
+      "main_story": 1000,
+      "side_quest": 300,
+      "daily_quest": 150,
+      "repeatable": 75
+    },
+    "exploration": {
+      "new_zone": 500,
+      "landmark_discovery": 100,
+      "hidden_area": 250
+    },
+    "crafting": {
+      "item_creation": 25,
+      "first_time_bonus": 100,
+      "quality_multiplier": {
+        "common": 1.0,
+        "uncommon": 1.5,
+        "rare": 2.0,
+        "epic": 3.0,
+        "legendary": 5.0
+      }
+    },
+    "social": {
+      "group_bonus": 1.2,
+      "guild_bonus": 1.1,
+      "mentorship_bonus": 1.3
+    }
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Character Progression Configuration Schema",
+  "description": "JSON Schema for validating character progression configuration files",
+  "definitions": {
+    "skill": {
+      "type": "object",
+      "required": ["display_name", "category", "max_level", "base_experience", "level_exponent", "level_multiplier", "description"],
+      "properties": {
+        "display_name": {"type": "string"},
+        "category": {
+          "type": "string",
+          "enum": ["melee_weapons", "ranged_weapons", "defense", "magic", "armor", "crafting", "utility"]
+        },
+        "max_level": {"type": "integer", "minimum": 1, "maximum": 50},
+        "base_experience": {"type": "number", "minimum": 0},
+        "level_exponent": {"type": "number", "minimum": 1.0},
+        "level_multiplier": {"type": "number", "minimum": 0},
+        "description": {"type": "string"}
+      }
+    },
+    "weapon": {
+      "type": "object",
+      "required": ["display_name", "associated_skill", "damage_type", "is_two_handed", "weapon_class", "base_damage", "attack_speed", "description"],
+      "properties": {
+        "display_name": {"type": "string"},
+        "associated_skill": {"type": "string"},
+        "damage_type": {"type": "string"},
+        "is_two_handed": {"type": "boolean"},
+        "weapon_class": {
+          "type": "string",
+          "enum": ["one_handed_melee", "two_handed_melee", "ranged", "thrown", "magic_staff", "defensive", "offhand_magic"]
+        },
+        "base_damage": {"type": "number", "minimum": 0},
+        "attack_speed": {"type": "number", "minimum": 0},
+        "description": {"type": "string"}
+      }
+    },
+    "damage_type": {
+      "type": "object",
+      "required": ["display_name", "category", "description", "effective_against", "weak_against", "color", "effects"],
+      "properties": {
+        "display_name": {"type": "string"},
+        "category": {
+          "type": "string",
+          "enum": ["physical", "elemental", "mystical", "beneficial", "divine", "death"]
+        },
+        "description": {"type": "string"},
+        "effective_against": {"type": "array", "items": {"type": "string"}},
+        "weak_against": {"type": "array", "items": {"type": "string"}},
+        "color": {"type": "string", "pattern": "^#[0-9A-Fa-f]{6}$"},
+        "effects": {"type": "object"},
+        "planned": {"type": "boolean"}
+      }
+    },
+    "role": {
+      "type": "object",
+      "required": ["display_name", "description", "suggested_skills", "playstyle", "group_role", "build_examples", "matchmaking_priority"],
+      "properties": {
+        "display_name": {"type": "string"},
+        "description": {"type": "string"},
+        "suggested_skills": {"type": "array", "items": {"type": "string"}},
+        "playstyle": {"type": "string"},
+        "group_role": {"type": "string"},
+        "build_examples": {"type": "array", "items": {"type": "string"}},
+        "matchmaking_priority": {"type": "string"}
+      }
+    }
+  },
+  "anyOf": [
+    {
+      "title": "Skills Configuration",
+      "type": "object",
+      "required": ["skills"],
+      "properties": {
+        "skills": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z_]+$": {"$ref": "#/definitions/skill"}
+          }
+        }
+      }
+    },
+    {
+      "title": "Weapons Configuration", 
+      "type": "object",
+      "required": ["weapons"],
+      "properties": {
+        "weapons": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z_]+$": {"$ref": "#/definitions/weapon"}
+          }
+        }
+      }
+    },
+    {
+      "title": "Damage Types Configuration",
+      "type": "object", 
+      "required": ["damage_types"],
+      "properties": {
+        "damage_types": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z_]+$": {"$ref": "#/definitions/damage_type"}
+          }
+        }
+      }
+    },
+    {
+      "title": "Roles Configuration",
+      "type": "object",
+      "required": ["roles"],
+      "properties": {
+        "roles": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z_]+$": {"$ref": "#/definitions/role"}
+          }
+        }
+      }
+    },
+    {
+      "title": "Progression Configuration",
+      "type": "object",
+      "required": ["character_progression", "skill_progression"],
+      "properties": {
+        "character_progression": {"type": "object"},
+        "skill_progression": {"type": "object"},
+        "milestone_rewards": {"type": "object"},
+        "loadout_system": {"type": "object"},
+        "experience_sources": {"type": "object"}
+      }
+    }
+  ]
+}
