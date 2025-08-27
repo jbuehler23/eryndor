@@ -1,6 +1,5 @@
 use bevy::prelude::*;
-use avian3d::{diagnostics::PhysicsDiagnostics, prelude::*};
-// Removed Tnua imports - using custom character controller
+use avian3d::prelude::*;
 
 pub mod systems;
 pub mod components;
@@ -11,6 +10,8 @@ pub mod utils;
 use systems::*;
 use resources::*;
 use states::*;
+use components::quest::QuestEvent;
+use systems::dialogue::DialogueEvent;
 
 // Re-export logging setup function for main.rs
 pub use systems::logging::setup_logging;
@@ -43,6 +44,7 @@ impl Plugin for EryndorPlugin {
                 setup_camera,
                 setup_ui,
                 load_initial_assets,
+                load_quest_database,
             ))
             
             // Main menu systems - only in MainMenu state
@@ -92,6 +94,24 @@ impl Plugin for EryndorPlugin {
                 debug_award_character_experience_system,
                 debug_quest_rewards_system,
             ).run_if(in_state(GameState::InGame)))
+            
+            // Quest systems - only in InGame state
+            .add_systems(Update, (
+                initialize_quest_log,
+                quest_start_system,
+                investigation_system,
+                quest_status_system,
+                quest_event_handler,
+            ).run_if(in_state(GameState::InGame)))
+            .add_event::<QuestEvent>()
+            
+            // Dialogue systems - only in InGame state
+            .add_systems(OnEnter(GameState::InGame), setup_dialogue_system)
+            .add_systems(Update, (
+                dialogue_interaction_system,
+                dialogue_help_system,
+            ).run_if(in_state(GameState::InGame)))
+            .add_event::<DialogueEvent>()
             // Animation and camera systems - only in InGame state
             .add_systems(Update, (
                 update_animation_states.after(kinematic_character_controller),

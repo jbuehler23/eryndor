@@ -18,6 +18,8 @@ pub mod quest_rewards;
 pub mod main_menu;
 pub mod ingame_ui;
 pub mod combat;
+pub mod quest;
+pub mod dialogue;
 
 pub use camera::*;
 pub use input::*;
@@ -39,3 +41,5 @@ pub use quest_rewards::*;
 pub use main_menu::*;
 pub use ingame_ui::*;
 pub use combat::*;
+pub use quest::*;
+pub use dialogue::*;

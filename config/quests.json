@@ -1,0 +1,237 @@
+{
+  "schema_version": "1.0",
+  "quests": {
+    "the_merchants_mystery": {
+      "id": "the_merchants_mystery",
+      "title": "The Merchant's Mystery",
+      "category": "investigation",
+      "difficulty": "intermediate",
+      "estimated_duration": "45-90 minutes",
+      "description": "Merchant Aldric Goldweaver has been acting strangely since his return from the northern trading routes. His usual jovial demeanor has been replaced by nervous glances and hushed conversations. The townspeople whisper of cursed goods and strange bargains. Something is amiss in the merchant quarter, and only careful investigation will reveal the truth.",
+      
+      "lore_context": {
+        "historical_background": "The northern trading routes have been plagued by bandit activity for decades. However, recent reports speak not of mere brigands, but of hooded figures offering 'beneficial exchanges' to merchants willing to transport certain mysterious cargo.",
+        "world_impact": "The merchant guild's integrity hangs in the balance. If cursed goods are indeed being traded, it could destabilize the entire regional economy and shatter trust between settlements.",
+        "character_significance": "This investigation will test not just your combat prowess, but your ability to read between the lines, ask the right questions, and piece together fragments of truth from unreliable witnesses."
+      },
+      
+      "phases": [
+        {
+          "phase_id": "initial_observation",
+          "title": "Initial Observations",
+          "description": "Begin by observing Merchant Aldric's behavior. Notice the subtle signs others have missed - his choice of words, what he avoids mentioning, the way his eyes dart toward certain corners of his shop.",
+          
+          "objectives": [
+            {
+              "type": "observation",
+              "description": "Speak with Aldric and pay attention to inconsistencies in his story about the northern routes",
+              "completion_criteria": {
+                "dialogue_flags": ["noticed_nervousness", "caught_contradiction", "observed_hidden_goods"],
+                "requires_attention": true,
+                "hint": "Listen carefully to his explanation of travel times versus the goods he claims to have acquired"
+              }
+            },
+            {
+              "type": "investigation",
+              "description": "Examine the merchant's shop for unusual items or evidence of tampering",
+              "completion_criteria": {
+                "items_examined": ["ledger", "strange_amulet", "northern_fabrics"],
+                "deduction_required": "Why would northern wool arrive with southern dyes already applied?"
+              }
+            }
+          ],
+          
+          "available_actions": [
+            "examine_shop_carefully",
+            "question_aldric_about_travels",
+            "compare_goods_with_seasonal_expectations",
+            "check_merchant_guild_records"
+          ],
+          
+          "clues_to_discover": [
+            {
+              "clue_id": "travel_time_inconsistency",
+              "description": "Aldric claims to have made the northern journey in 8 days, but the goods he carries suggest a 3-week expedition",
+              "discovery_method": "Careful questioning about travel logistics"
+            },
+            {
+              "clue_id": "mysterious_amulet",
+              "description": "A bone amulet with strange markings hidden beneath the counter, still warm to the touch",
+              "discovery_method": "Thorough examination of shop premises"
+            },
+            {
+              "clue_id": "altered_ledger",
+              "description": "Recent entries in the merchant's ledger show signs of erasure and rewriting",
+              "discovery_method": "Academic analysis of documentation"
+            }
+          ],
+          
+          "failure_conditions": {
+            "impatient_questioning": "Pressing Aldric too aggressively will cause him to clam up and refuse further cooperation",
+            "obvious_snooping": "Being caught examining his private records will end the investigation prematurely",
+            "ignoring_details": "Failing to notice subtle inconsistencies will leave you without crucial evidence for later phases"
+          }
+        },
+        
+        {
+          "phase_id": "witness_interviews",
+          "title": "Gathering Testimonies",
+          "description": "The merchant quarter buzzes with gossip and half-truths. Each person you speak with holds a piece of the puzzle, but separating fact from speculation requires skill and patience.",
+          
+          "prerequisites": {
+            "completed_phases": ["initial_observation"],
+            "required_clues": ["travel_time_inconsistency"],
+            "minimum_evidence": 2
+          },
+          
+          "objectives": [
+            {
+              "type": "social_investigation",
+              "description": "Interview other merchants about recent changes in trading patterns and Aldric's behavior",
+              "npcs_to_question": [
+                {
+                  "name": "Marta Ironwright",
+                  "profession": "Blacksmith",
+                  "knowledge": "Has noticed strange orders for silver implements, which are unusual for her typical clientele",
+                  "personality": "Direct and honest, but suspicious of outsiders asking too many questions",
+                  "conversation_hints": "Ask about recent orders, but frame it in terms of market trends rather than investigation"
+                },
+                {
+                  "name": "Elder Thorne",
+                  "profession": "Village Elder",
+                  "knowledge": "Remembers old stories about 'cursed bargains' and may know the historical context",
+                  "personality": "Loves to tell stories but often buries important details in lengthy tales",
+                  "conversation_hints": "Be patient with his storytelling - the crucial information comes in seemingly unrelated anecdotes"
+                },
+                {
+                  "name": "Benny Lightfingers",
+                  "profession": "Former thief, now stable hand",
+                  "knowledge": "Has been observing unusual nighttime activities around the merchant district",
+                  "personality": "Paranoid and evasive, but can be convinced to share information if approached correctly",
+                  "conversation_hints": "Don't accuse him of current wrongdoing - focus on his legitimate observations"
+                }
+              ]
+            }
+          ],
+          
+          "dialogue_complexity": {
+            "multiple_conversation_paths": true,
+            "information_reliability": "varies_by_source",
+            "cross_reference_required": true,
+            "note": "Some NPCs will provide contradictory information - players must determine who is reliable"
+          }
+        },
+        
+        {
+          "phase_id": "investigation_deepens",
+          "title": "Following the Trail",
+          "description": "Armed with testimonies and observations, you must now piece together the larger picture. Where do these mysterious northern routes truly lead? What bargains are being struck in the shadows?",
+          
+          "prerequisites": {
+            "completed_phases": ["initial_observation", "witness_interviews"],
+            "required_clues": ["travel_time_inconsistency", "mysterious_amulet"],
+            "minimum_testimonies": 3
+          },
+          
+          "objectives": [
+            {
+              "type": "deduction",
+              "description": "Analyze the gathered evidence to determine the true nature of Aldric's dealings",
+              "required_reasoning": [
+                "Connect the timing inconsistencies with witness reports of nighttime activities",
+                "Link the bone amulet to Elder Thorne's stories of cursed bargains",
+                "Determine why silver implements would be needed for whatever Aldric is involved in"
+              ]
+            },
+            {
+              "type": "location_discovery",
+              "description": "Use your deductions to locate where these mysterious exchanges are taking place",
+              "discovery_method": "environmental_clues",
+              "hint": "Consider what locations would be accessible at night but hidden from casual observation"
+            }
+          ]
+        },
+        
+        {
+          "phase_id": "confrontation_and_resolution",
+          "title": "The Truth Revealed",
+          "description": "The final pieces of the puzzle await. Will you confront Aldric directly with your evidence, or will you attempt to witness these mysterious exchanges firsthand? Your choice will determine not just the quest's outcome, but Aldric's fate.",
+          
+          "resolution_paths": [
+            {
+              "path_id": "direct_confrontation",
+              "description": "Present your evidence to Aldric and demand the truth",
+              "requirements": {
+                "evidence_strength": "high",
+                "relationship_with_aldric": "neutral_or_better",
+                "required_clues": ["travel_time_inconsistency", "mysterious_amulet", "altered_ledger"]
+              },
+              "consequences": {
+                "aldric_fate": "confesses_and_seeks_help",
+                "town_impact": "merchant_guild_implements_safeguards",
+                "player_reputation": "trusted_investigator"
+              }
+            },
+            {
+              "path_id": "undercover_observation",
+              "description": "Attempt to witness the mysterious exchanges personally",
+              "requirements": {
+                "stealth_skill": "moderate",
+                "investigation_thoroughness": "high",
+                "timing": "must_arrive_at_correct_location_and_time"
+              },
+              "consequences": {
+                "aldric_fate": "rescued_from_coercion",
+                "town_impact": "threat_eliminated_at_source",
+                "player_reputation": "hero_of_the_shadows"
+              }
+            },
+            {
+              "path_id": "incomplete_investigation",
+              "description": "If insufficient evidence is gathered, the truth remains partially hidden",
+              "consequences": {
+                "aldric_fate": "continues_troubled_but_unhelped",
+                "town_impact": "mysterious_activities_persist",
+                "player_reputation": "well_intentioned_but_inexperienced"
+              }
+            }
+          ]
+        }
+      ],
+      
+      "rewards": {
+        "base_experience": 850,
+        "skill_bonuses": [
+          {"skill": "Investigation", "experience": 200},
+          {"skill": "Social", "experience": 150},
+          {"skill": "Deduction", "experience": 100}
+        ],
+        "unique_items": [
+          {
+            "item_id": "aldrics_trust_token",
+            "name": "Aldric's Trust Token",
+            "description": "A simple merchant's seal that opens doors to information and favorable trading terms throughout the region",
+            "mechanical_benefit": "+10% better prices with all merchants, +1 to all social investigation rolls"
+          }
+        ],
+        "unlocked_content": [
+          "merchant_guild_questline",
+          "northern_route_mysteries_arc",
+          "cursed_bargains_investigation_series"
+        ]
+      },
+      
+      "narrative_themes": {
+        "primary": "The price of prosperity - what compromises are acceptable in pursuit of wealth?",
+        "secondary": "Information as currency - the value of careful observation and patient questioning",
+        "moral_complexity": "No clear villains, only people making difficult choices under pressure"
+      },
+      
+      "replayability": {
+        "multiple_solution_paths": true,
+        "hidden_details": "Each playthrough may reveal different aspects of the mystery",
+        "player_choice_impact": "Different approaches yield different long-term consequences"
+      }
+    }
+  }
+}
