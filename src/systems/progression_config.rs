@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use crate::components::progression::{SkillType, WeaponType, DamageType, RoleType};
 use crate::resources::ProgressionConfig;
-use std::collections::HashMap;
 
 /// System to demonstrate JSON configuration integration
 pub fn debug_progression_config_system(
@@ -45,7 +44,7 @@ pub fn debug_progression_config_system(
         // Show role information
         info!("Available Roles ({}):", config.roles.len());
         for (key, role_config) in &config.roles {
-            info!("  - {}: {} primary skills", key, role_config.display_name, role_config.primary_skills.len());
+            info!("  - {}: {} ({} primary skills)", key, role_config.display_name, role_config.primary_skills.len());
         }
         
         info!("=== END CONFIG DEBUG ===");
@@ -72,7 +71,7 @@ impl ProgressionConfig {
             "lightning_magic" => Some(SkillType::LightningMagic),
             "shadow_magic" => Some(SkillType::ShadowMagic),
             "nature_magic" => Some(SkillType::NatureMagic),
-            "arcane_magic" => Some(SkillType::ArcaneMagic),
+            "arcane_magic" => Some(SkillType::ArcanieMagic),
             "restoration" => Some(SkillType::Restoration),
             "divination" => Some(SkillType::Divination),
             "heavy_armor" => Some(SkillType::HeavyArmor),
@@ -108,7 +107,7 @@ impl ProgressionConfig {
             SkillType::LightningMagic => "lightning_magic",
             SkillType::ShadowMagic => "shadow_magic",
             SkillType::NatureMagic => "nature_magic",
-            SkillType::ArcaneMagic => "arcane_magic",
+            SkillType::ArcanieMagic => "arcane_magic",
             SkillType::Restoration => "restoration",
             SkillType::Divination => "divination",
             SkillType::HeavyArmor => "heavy_armor",

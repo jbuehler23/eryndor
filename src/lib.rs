@@ -40,18 +40,18 @@ impl Plugin for EryndorPlugin {
             
             // Core systems - Order matters for dependencies
             .add_systems(Startup, (
-                load_progression_config, // Load JSON configuration first
-                validate_progression_config_system.after(load_progression_config), // Validate configuration
-                setup_camera, // Then setup camera to look at player
+                setup_camera,
                 setup_ui,
                 load_initial_assets,
+            ))
+            .add_systems(Startup, (
                 setup_animation_assets,
                 // setup_character_controller, // Not needed for simple kinematic controller
                 // setup_terrain, // TEMPORARILY DISABLED: Complex terrain system with physics mismatch
                 setup_simple_terrain, // TESTING: Clean terrain system with perfect physics alignment
                 // setup_biomes.after(setup_terrain), // TEMPORARILY DISABLED: Depends on complex terrain system
                 load_world_object_assets, // Load forest/nature assets
-            ))
+            ).after(load_initial_assets))
             // Core gameplay systems
             .add_systems(Update, (
                 spawn_player_when_assets_loaded.after(load_initial_assets),
@@ -67,6 +67,7 @@ impl Plugin for EryndorPlugin {
                 debug_character_v2_system,
                 debug_rested_bonus_system,
                 debug_award_character_experience_system,
+                debug_quest_rewards_system,
             ))
             // Animation and camera systems
             .add_systems(Update, (
@@ -90,7 +91,6 @@ impl Plugin for EryndorPlugin {
             .add_systems(Update, (
                 debug_info,
                 collect_performance_metrics,
-                debug_progression_config_system, // Debug JSON configuration system
                 // debug_biome_visualization, // TEMPORARILY DISABLED: Depends on biomes  
                 debug_terrain_alignment, // Debug the simplified terrain height system
             ).run_if(in_state(GameState::Debug)));

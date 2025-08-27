@@ -16,7 +16,8 @@ pub fn character_level_system(
         // - Crafting achievements
         
         let highest_skill = skills.highest_skill_level();
-        let expected_character_level = std::cmp::min(50, highest_skill + (skills.average_skill_level() / 5.0) as u32);
+        let max_level = 50; // Static max level from hardcoded config
+        let expected_character_level = std::cmp::min(max_level, highest_skill + (skills.average_skill_level() / 5.0) as u32);
         
         // If skills have outpaced character level, award catch-up experience
         if expected_character_level > character_level.level {

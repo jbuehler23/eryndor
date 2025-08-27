@@ -1,37 +1,29 @@
 {
   "character_progression": {
     "max_character_level": 50,
-    "base_experience": 100,
-    "level_exponent": 2.0,
-    "level_multiplier": 200,
-    "formula_description": "level^2 * 100 + level * 200",
-    "experience_curve": {
-      "1": 0,
-      "2": 500,
-      "5": 4500,
-      "10": 30000,
-      "25": 162500,
-      "50": 270500
+    "level_names": {
+      "1": "Novice",
+      "10": "Apprentice", 
+      "20": "Journeyman",
+      "30": "Expert",
+      "40": "Master",
+      "50": "Grandmaster"
     }
   },
   "skill_progression": {
     "max_skill_level": 50,
-    "base_experience": 50,
-    "level_exponent": 1.8,
-    "level_multiplier": 25,
-    "formula_description": "level^1.8 * 50 + level * 25",
     "rested_bonus": {
       "multiplier": 1.5,
       "duration_seconds": 300,
       "sources": ["inn", "campfire", "guild_hall"]
     },
-    "experience_curve": {
-      "1": 0,
-      "2": 75,
-      "5": 575,
-      "10": 2475,
-      "25": 18125,
-      "50": 31075
+    "skill_level_names": {
+      "1": "Untrained",
+      "5": "Novice",
+      "15": "Apprentice",
+      "25": "Journeyman", 
+      "35": "Expert",
+      "50": "Master"
     }
   },
   "milestone_rewards": {
@@ -108,67 +100,119 @@
     "switching_restrictions": {
       "allowed_locations": ["inn", "campfire", "guild_hall", "player_home"],
       "cooldown_seconds": 5,
-      "combat_restriction": true
+      "combat_restriction": true,
+    "restriction_message": "Cannot switch loadouts during combat"
     },
     "components": {
       "primary_weapon": {
         "required": true,
-        "description": "Main weapon determining combat style"
+        "description": "Main weapon determining combat style",
+        "slot_name": "Primary Weapon",
+        "tooltip": "Your main weapon defines your combat role"
       },
       "secondary_item": {
         "required": false,
-        "description": "Shield, off-hand weapon, or magical focus"
+        "description": "Shield, off-hand weapon, or magical focus",
+        "slot_name": "Secondary Item",
+        "tooltip": "Optional secondary weapon or shield"
       },
       "armor_type": {
         "required": true,
         "options": ["heavy", "medium", "light"],
-        "description": "Determines defense and role compatibility"
+        "description": "Determines defense and role compatibility",
+        "slot_name": "Armor Type",
+        "tooltip": "Heavy for tanks, medium for balanced, light for mobility"
       },
       "active_abilities": {
         "required": true,
         "count": 8,
-        "description": "Hotbar abilities based on equipped weapons and skills"
+        "description": "Hotbar abilities based on equipped weapons and skills",
+        "slot_name": "Active Abilities", 
+        "tooltip": "Skills available on your hotbar"
       }
     }
   },
   "experience_sources": {
     "combat": {
       "kill_bonus": {
-        "base_experience": 50,
-        "level_scaling": true,
         "rare_enemy_multiplier": 2.0
-      },
-      "damage_dealt": {
-        "experience_per_damage": 0.1,
-        "skill_specific": true
       }
     },
-    "quests": {
-      "main_story": 1000,
-      "side_quest": 300,
-      "daily_quest": 150,
-      "repeatable": 75
+    "quest_categories": {
+      "main_story": {
+        "name": "Main Story Quest",
+        "description": "Primary storyline progression",
+        "icon": "quest_main"
+      },
+      "side_quest": {
+        "name": "Side Quest", 
+        "description": "Optional story content",
+        "icon": "quest_side"
+      },
+      "daily_quest": {
+        "name": "Daily Quest",
+        "description": "Daily repeatable content", 
+        "icon": "quest_daily"
+      },
+      "repeatable": {
+        "name": "Repeatable Task",
+        "description": "Grinding and farming content",
+        "icon": "quest_repeatable"
+      }
     },
     "exploration": {
-      "new_zone": 500,
-      "landmark_discovery": 100,
-      "hidden_area": 250
+      "discovery_types": {
+        "new_zone": {
+          "name": "Zone Discovery",
+          "description": "First time entering a new area",
+          "icon": "discovery_zone"
+        },
+        "landmark": {
+          "name": "Landmark Discovery", 
+          "description": "Found notable location",
+          "icon": "discovery_landmark"
+        },
+        "hidden_area": {
+          "name": "Secret Discovery",
+          "description": "Uncovered hidden content",
+          "icon": "discovery_secret"
+        }
+      }
     },
     "crafting": {
-      "item_creation": 25,
-      "first_time_bonus": 100,
-      "quality_multiplier": {
-        "common": 1.0,
-        "uncommon": 1.5,
-        "rare": 2.0,
-        "epic": 3.0,
-        "legendary": 5.0
+      "quality_names": {
+        "common": "Common",
+        "uncommon": "Uncommon", 
+        "rare": "Rare",
+        "epic": "Epic",
+        "legendary": "Legendary"
+      },
+      "quality_colors": {
+        "common": "#FFFFFF",
+        "uncommon": "#1EFF00",
+        "rare": "#0070DD", 
+        "epic": "#A335EE",
+        "legendary": "#FF8000"
       }
     },
     "social": {
-      "group_bonus": 1.2,
-      "guild_bonus": 1.1,
-      "mentorship_bonus": 1.3
+      "bonus_types": {
+        "group_play": {
+          "name": "Group Bonus",
+          "description": "Playing with others",
+          "icon": "social_group"
+        },
+        "guild_membership": {
+          "name": "Guild Bonus", 
+          "description": "Active guild member",
+          "icon": "social_guild"
+        },
+        "mentorship": {
+          "name": "Mentorship Bonus",
+          "description": "Teaching or learning from others", 
+          "icon": "social_mentor"
+        }
+      }
     }
   }
 }

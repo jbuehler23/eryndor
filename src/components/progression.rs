@@ -375,7 +375,7 @@ impl CharacterSkills {
         self.skills.get_mut(&skill_type)
     }
     
-    /// Use a skill and gain experience
+    /// Use a skill and gain experience (legacy hardcoded version)
     pub fn use_skill(&mut self, 
                      skill_type: SkillType, 
                      target_level: u32, 
@@ -392,6 +392,7 @@ impl CharacterSkills {
             false
         }
     }
+
     
     /// Apply rested bonus from staying at inns/campfires
     pub fn apply_rested_bonus(&mut self, bonus_multiplier: f32, duration_seconds: f32) {

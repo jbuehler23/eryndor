@@ -14,6 +14,7 @@ pub mod collision_debug;
 pub mod character_controller;
 pub mod progression;
 pub mod progression_config;
+pub mod quest_rewards;
 
 pub use camera::*;
 pub use input::*;
@@ -31,3 +32,4 @@ pub use collision_debug::*;
 pub use character_controller::*;
 pub use progression::*;
 pub use progression_config::*;
+pub use quest_rewards::*;
