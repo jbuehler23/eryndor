@@ -44,6 +44,29 @@ impl Plugin for EryndorPlugin {
                 setup_ui,
                 load_initial_assets,
             ))
+            
+            // Main menu systems - only in MainMenu state
+            .add_systems(OnEnter(GameState::MainMenu), setup_main_menu)
+            .add_systems(Update, handle_main_menu_interactions.run_if(in_state(GameState::MainMenu)))
+            .add_systems(OnExit(GameState::MainMenu), cleanup_main_menu)
+            
+            // In-game UI systems - only in InGame state
+            .add_systems(OnEnter(GameState::InGame), (setup_ingame_ui, setup_combat_system))
+            .add_systems(Update, (
+                update_skill_overview,
+                handle_experience_notifications,
+                handle_ingame_escape,
+            ).run_if(in_state(GameState::InGame)))
+            .add_systems(OnExit(GameState::InGame), cleanup_ingame_ui)
+            
+            // Combat systems - only in InGame state
+            .add_systems(Update, (
+                spawn_demo_enemies,
+                handle_target_selection,
+                handle_player_auto_attack,
+                cleanup_dead_enemies,
+                display_target_health,
+            ).run_if(in_state(GameState::InGame)))
             .add_systems(Startup, (
                 setup_animation_assets,
                 // setup_character_controller, // Not needed for simple kinematic controller
@@ -52,14 +75,14 @@ impl Plugin for EryndorPlugin {
                 // setup_biomes.after(setup_terrain), // TEMPORARILY DISABLED: Depends on complex terrain system
                 load_world_object_assets, // Load forest/nature assets
             ).after(load_initial_assets))
-            // Core gameplay systems
+            // Core gameplay systems - only in InGame state
             .add_systems(Update, (
                 spawn_player_when_assets_loaded.after(load_initial_assets),
                 handle_input,
                 toggle_collision_debug,
                 kinematic_character_controller.after(handle_input),
-            ))
-            // Character progression systems
+            ).run_if(in_state(GameState::InGame)))
+            // Character progression systems - only in InGame state
             .add_systems(Update, (
                 character_level_system,
                 skill_usage_system,
@@ -68,15 +91,15 @@ impl Plugin for EryndorPlugin {
                 debug_rested_bonus_system,
                 debug_award_character_experience_system,
                 debug_quest_rewards_system,
-            ))
-            // Animation and camera systems
+            ).run_if(in_state(GameState::InGame)))
+            // Animation and camera systems - only in InGame state
             .add_systems(Update, (
                 update_animation_states.after(kinematic_character_controller),
                 setup_knight_animations_when_ready,
                 play_animations.after(update_animation_states),
                 update_camera.after(kinematic_character_controller),
                 debug_animation_state.after(update_animation_states),
-            ))
+            ).run_if(in_state(GameState::InGame)))
             // UI and utility systems
             .add_systems(Update, (
                 update_ui,

@@ -15,6 +15,9 @@ pub mod character_controller;
 pub mod progression;
 pub mod progression_config;
 pub mod quest_rewards;
+pub mod main_menu;
+pub mod ingame_ui;
+pub mod combat;
 
 pub use camera::*;
 pub use input::*;
@@ -33,3 +36,6 @@ pub use character_controller::*;
 pub use progression::*;
 pub use progression_config::*;
 pub use quest_rewards::*;
+pub use main_menu::*;
+pub use ingame_ui::*;
+pub use combat::*;
