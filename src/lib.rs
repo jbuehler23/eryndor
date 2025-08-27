@@ -34,6 +34,8 @@ impl Plugin for EryndorPlugin {
             .insert_resource(load_config())
             .init_resource::<InputResource>()
             .init_resource::<CollisionDebugConfig>() // Debug collision interaction
+            .init_resource::<GameDebugConfig>() // Configurable debug logging
+            .init_resource::<DebugTimer>() // Debug timing control
             // V1 StatsConfig removed with character progression cleanup
             
             // States - Game flow control
@@ -119,6 +121,7 @@ impl Plugin for EryndorPlugin {
                 play_animations.after(update_animation_states),
                 update_camera.after(kinematic_character_controller),
                 debug_animation_state.after(update_animation_states),
+                debug_animation_changes.after(update_animation_states),
             ).run_if(in_state(GameState::InGame)))
             // UI and utility systems
             .add_systems(Update, (
@@ -129,6 +132,8 @@ impl Plugin for EryndorPlugin {
                 update_config_system,
                 save_config_on_exit,
                 log_performance_metrics,
+                debug_config_system, // Debug configuration controls
+                debug_help_system, // Debug help display
             ))
             // Debug systems - Only in debug builds
             .add_systems(Update, (

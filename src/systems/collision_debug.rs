@@ -4,6 +4,7 @@ use crate::components::Player;
 use crate::utils::{TerrainHeightSampler};
 use crate::systems::terrain_simple::sample_terrain_height;
 use crate::components::PlayerMovementState;
+use crate::resources::{GameDebugConfig, DebugTimer};
 
 /// Debug system for collision and terrain interaction analysis
 /// Logs player position, velocity, and terrain height for debugging floating issues
@@ -28,23 +29,46 @@ impl Default for CollisionDebugConfig {
 /// System to debug player-terrain collision interaction
 pub fn debug_player_collision(
     time: Res<Time>,
-    mut debug_config: ResMut<CollisionDebugConfig>,
+    debug_config: Res<GameDebugConfig>,
+    mut debug_timer: ResMut<DebugTimer>,
     terrain_sampler: Option<Res<TerrainHeightSampler>>,
     gravity: Res<Gravity>,
     player_query: Query<(Entity, &Transform, Option<&LinearVelocity>, Option<&PlayerMovementState>, Option<&RigidBody>, Option<&Collider>), With<Player>>,
     children_query: Query<&Children>,
     collider_query: Query<&Collider>,
 ) {
-    if !debug_config.enabled {
+    if !debug_config.collision_debug {
         return;
     }
     
-    let current_time = time.elapsed_secs();
-    if current_time - debug_config.last_log_time < debug_config.log_interval {
+    let current_time = time.elapsed_secs_f64();
+    if !debug_timer.should_log_collision(current_time, debug_config.debug_update_interval) {
         return;
     }
     
-    debug_config.last_log_time = current_time;
+    // Check if we should only log when moving
+    if debug_config.debug_only_when_moving {
+        let Ok((_, _, linear_velocity, controller_state, _, _)) = player_query.single() else {
+            return;
+        };
+        
+        let velocity = if let Some(movement_state) = controller_state {
+            Vec3::new(
+                movement_state.current_direction.x * movement_state.current_speed,
+                movement_state.vertical_velocity,
+                movement_state.current_direction.z * movement_state.current_speed
+            )
+        } else if let Some(linear_vel) = linear_velocity {
+            **linear_vel
+        } else {
+            Vec3::ZERO
+        };
+        
+        // Only log if player is actually moving
+        if velocity.length() < 0.1 {
+            return;
+        }
+    }
     
     let Ok((entity, transform, linear_velocity, controller_state, rigidbody, collider)) = player_query.single() else {
         return;
@@ -148,13 +172,12 @@ pub fn debug_player_collision(
     }
 }
 
-/// System to toggle collision debug rendering (when F3 is pressed)
+/// Legacy collision debug toggle - now handled by DebugConfig system
+/// This function is kept for backwards compatibility but does nothing
 pub fn toggle_collision_debug(
-    keys: Res<ButtonInput<KeyCode>>,
-    mut debug_config: ResMut<CollisionDebugConfig>,
+    _keys: Res<ButtonInput<KeyCode>>,
+    _debug_config: ResMut<CollisionDebugConfig>,
 ) {
-    if keys.just_pressed(KeyCode::F3) {
-        debug_config.enabled = !debug_config.enabled;
-        info!("Collision debug {}", if debug_config.enabled { "ENABLED" } else { "DISABLED" });
-    }
+    // This is now handled by the DebugConfig system with F1 key
+    // Kept for backwards compatibility to prevent compilation errors
 }

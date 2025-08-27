@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use avian3d::prelude::*;
-use crate::resources::InputResource;
+use crate::resources::{InputResource, GameDebugConfig, DebugTimer};
 use crate::components::{Player, PlayerMovementConfig, PlayerMovementState};
 use super::{config::*, collision::*};
 
@@ -53,6 +53,8 @@ pub enum MovementState {
 /// Main character controller system - replaces the old kinematic controller
 pub fn enhanced_character_controller(
     time: Res<Time>,
+    debug_config: Res<GameDebugConfig>,
+    mut debug_timer: ResMut<DebugTimer>,
     input: Res<InputResource>,
     config: Res<CharacterControllerConfig>,
     mut player_query: Query<
@@ -103,14 +105,17 @@ pub fn enhanced_character_controller(
         &excluded_entities,
     );
     
-    // Debug ground detection on slopes
-    if ground_info.is_some() {
+    // Debug ground detection on slopes - controlled by DebugConfig
+    if debug_config.slide_debug && ground_info.is_some() {
         let ground_result = ground_info.as_ref().unwrap();
         let slope_angle_deg = ground_result.normal.dot(Vec3::Y).acos() * 180.0 / std::f32::consts::PI;
         if slope_angle_deg > 5.0 { // Only log on slopes > 5 degrees
-            println!("DEBUG SLOPE: pos={:.1},{:.1},{:.1} grounded={} slope={:.1}° normal=({:.2},{:.2},{:.2})", 
-                     player_transform.translation.x, player_transform.translation.y, player_transform.translation.z,
-                     is_grounded, slope_angle_deg, ground_result.normal.x, ground_result.normal.y, ground_result.normal.z);
+            let current_time = time.elapsed_secs_f64();
+            if debug_timer.should_log_slide(current_time, debug_config.debug_update_interval) {
+                info!("🏃 SLOPE: pos=({:.1},{:.1},{:.1}) grounded={} slope={:.1}° normal=({:.2},{:.2},{:.2})", 
+                      player_transform.translation.x, player_transform.translation.y, player_transform.translation.z,
+                      is_grounded, slope_angle_deg, ground_result.normal.x, ground_result.normal.y, ground_result.normal.z);
+            }
         }
     }
 
@@ -141,11 +146,17 @@ pub fn enhanced_character_controller(
     if input.left { movement_input.x -= 1.0; }
     if input.right { movement_input.x += 1.0; }
     
-    // Debug input detection
-    if input.forward || input.backward || input.left || input.right || both_mouse_forward {
-        println!("DEBUG INPUT: forward={} backward={} left={} right={} mouse_forward={} movement_input=({:.2},{:.2},{:.2})", 
-                 input.forward, input.backward, input.left, input.right, both_mouse_forward, 
-                 movement_input.x, movement_input.y, movement_input.z);
+    // Debug input detection - controlled by DebugConfig
+    if debug_config.input_debug && (input.forward || input.backward || input.left || input.right || both_mouse_forward) {
+        let current_time = time.elapsed_secs_f64();
+        if debug_timer.should_log_input(current_time, debug_config.debug_update_interval) {
+            if !debug_config.debug_only_when_moving || 
+               (input.forward || input.backward || input.left || input.right) {
+                info!("🎮 CONTROLLER INPUT: forward={} backward={} left={} right={} mouse_forward={} movement_input=({:.2},{:.2},{:.2})", 
+                      input.forward, input.backward, input.left, input.right, both_mouse_forward, 
+                      movement_input.x, movement_input.y, movement_input.z);
+            }
+        }
     }
 
     // Apply camera-relative movement
@@ -174,16 +185,22 @@ pub fn enhanced_character_controller(
         0.0
     };
     
-    // Debug target speed calculation
-    if desired_movement.length() > 0.0 {
-        println!("DEBUG SPEED: desired_movement_len={:.3}, running={}, target_speed={:.3}", 
-                 desired_movement.length(), input.up, target_speed);
+    // Debug target speed calculation - controlled by DebugConfig
+    if debug_config.slide_debug && desired_movement.length() > 0.0 {
+        let current_time = time.elapsed_secs_f64();
+        if debug_timer.should_log_slide(current_time, debug_config.debug_update_interval) {
+            info!("🏃 SPEED: desired_movement_len={:.3}, running={}, target_speed={:.3}", 
+                  desired_movement.length(), input.up, target_speed);
+        }
     }
 
-    // Handle jumping with coyote time
-    if input.down {
-        println!("DEBUG JUMP: space pressed - is_jumping={}, can_jump={}, grounded={}, coyote_time={:.3}", 
-                 movement_state.is_jumping, controller_state.can_jump, controller_state.is_grounded, controller_state.coyote_time_remaining);
+    // Handle jumping with coyote time - debug controlled by DebugConfig
+    if debug_config.slide_debug && input.down {
+        let current_time = time.elapsed_secs_f64();
+        if debug_timer.should_log_slide(current_time, debug_config.debug_update_interval) {
+            info!("🏃 JUMP: space pressed - is_jumping={}, can_jump={}, grounded={}, coyote_time={:.3}", 
+                  movement_state.is_jumping, controller_state.can_jump, controller_state.is_grounded, controller_state.coyote_time_remaining);
+        }
     }
     if input.down && !movement_state.is_jumping && controller_state.can_jump {
         let jump_velocity = (2.0 * 9.81 * config.air.jump_height).sqrt();
@@ -193,7 +210,9 @@ pub fn enhanced_character_controller(
         // Consume coyote time
         controller_state.coyote_time_remaining = 0.0;
         controller_state.can_jump = false;
-        println!("DEBUG JUMP: Jump initiated with velocity={} (coyote time used)", jump_velocity);
+        if debug_config.slide_debug {
+            info!("🏃 JUMP: Jump initiated with velocity={} (coyote time used)", jump_velocity);
+        }
     }
 
     // Apply movement based on grounded state
@@ -264,11 +283,8 @@ fn handle_ground_movement(
     let slope_modifier = calculate_slope_modifier(controller_state.ground_normal, desired_direction, config);
     let effective_speed = movement_state.current_speed * slope_modifier;
     
-    // Debug movement calculations
-    if target_speed > 0.0 || desired_direction.length() > 0.0 {
-        println!("DEBUG MOVEMENT: target_speed={:.3}, current_speed={:.3}, slope_modifier={:.3}, effective_speed={:.3}, desired_dir_len={:.3}", 
-                 target_speed, movement_state.current_speed, slope_modifier, effective_speed, desired_direction.length());
-    }
+    // Debug movement calculations (disabled - too verbose)
+    // These detailed movement calculations can be enabled in debug builds if needed
 
     // Calculate desired velocity
     let desired_velocity = if desired_direction.length() > 0.0 {
@@ -295,8 +311,7 @@ fn handle_ground_movement(
     let movement_delta = current_velocity * dt;
 
     if movement_delta.length() > 0.001 {
-        println!("DEBUG MOVE: movement_delta={:.3}, current_velocity={:.3}, effective_speed={:.3}", 
-                 movement_delta.length(), current_velocity.length(), effective_speed);
+        // Debug move calculations (disabled - too verbose)
         // Apply enhanced collision detection and resolution
         let (new_position, final_velocity, collision_result) = CollisionSystem::collide_and_slide(
             transform.translation,

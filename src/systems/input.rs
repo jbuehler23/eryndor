@@ -1,10 +1,13 @@
 use bevy::prelude::*;
 use bevy::window::{CursorGrabMode, PrimaryWindow};
 use bevy::input::mouse::{MouseWheel, MouseMotion};
-use crate::resources::InputResource;
+use crate::resources::{InputResource, GameDebugConfig, DebugTimer};
 
 // Input handling system - WoW-style camera controls
 pub fn handle_input(
+    time: Res<Time>,
+    debug_config: Res<GameDebugConfig>,
+    mut debug_timer: ResMut<DebugTimer>,
     mut input_resource: ResMut<InputResource>,
     keyboard: Res<ButtonInput<KeyCode>>,
     mouse: Res<ButtonInput<MouseButton>>,
@@ -24,11 +27,19 @@ pub fn handle_input(
     input_resource.up = keyboard.pressed(KeyCode::ShiftLeft); // Shift for running
     input_resource.down = keyboard.pressed(KeyCode::Space); // Space for jumping
     
-    // Debug input detection
-    if input_resource.forward || input_resource.backward || input_resource.left || input_resource.right || input_resource.down {
-        println!("INPUT DEBUG: W={} S={} A={} D={} Space={} Shift={}", 
-                 input_resource.forward, input_resource.backward, input_resource.left, 
-                 input_resource.right, input_resource.down, input_resource.up);
+    // Debug input detection - controlled by DebugConfig
+    if debug_config.input_debug && 
+       (input_resource.forward || input_resource.backward || input_resource.left || input_resource.right || input_resource.down) {
+        let current_time = time.elapsed_secs_f64();
+        if debug_timer.should_log_input(current_time, debug_config.debug_update_interval) {
+            // Only log if movement is happening or we're not limiting to movement
+            if !debug_config.debug_only_when_moving || 
+               (input_resource.forward || input_resource.backward || input_resource.left || input_resource.right) {
+                info!("🎮 INPUT: W={} S={} A={} D={} Space={} Shift={}", 
+                      input_resource.forward, input_resource.backward, input_resource.left, 
+                      input_resource.right, input_resource.down, input_resource.up);
+            }
+        }
     }
     
     // Mouse button state tracking

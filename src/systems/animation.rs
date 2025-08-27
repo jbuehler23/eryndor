@@ -3,7 +3,7 @@ use avian3d::prelude::*;
 use bevy_animation::graph::{AnimationGraph, AnimationGraphHandle};
 use bevy::gltf::GltfAssetLabel;
 use crate::components::{Player, AnimationController, AnimationAssets, KnightAnimationSetup, PlayerMovementState};
-use crate::resources::InputResource;
+use crate::resources::{InputResource, GameDebugConfig};
 
 /// Animation system - updates character animation states based on kinematic movement
 /// Following Single Responsibility: only handles animation state updates
@@ -41,11 +41,8 @@ pub fn update_animation_states(
         );
         
         if state_changed {
-            info!(
-                "Animation state changed: {:?} -> {:?}", 
-                anim_controller.previous_state, 
-                anim_controller.current_state
-            );
+            // Animation debug logging is now controlled by DebugConfig
+            // This will be updated to use the debug config in a separate system
         }
     }
 }
@@ -208,9 +205,14 @@ pub fn play_animations(
 /// Debug animation system - displays current animation state in UI
 /// Following YAGNI: Simple debug display for development
 pub fn debug_animation_state(
+    debug_config: Res<GameDebugConfig>,
     animation_query: Query<&AnimationController, With<Player>>,
     mut debug_text_query: Query<&mut Text, With<crate::systems::ui::FPSText>>,
 ) {
+    if !debug_config.animation_debug {
+        return;
+    }
+    
     if let Ok(anim_controller) = animation_query.single() {
         if let Ok(mut text) = debug_text_query.single_mut() {
             // Update debug text to include animation state (Bevy 0.16 Text API)
@@ -223,5 +225,23 @@ pub fn debug_animation_state(
                 anim_controller.current_state
             );
         }
+    }
+}
+
+/// Debug system for animation state changes - logs when animations change
+pub fn debug_animation_changes(
+    debug_config: Res<GameDebugConfig>,
+    animation_query: Query<&AnimationController, (With<Player>, Changed<AnimationController>)>,
+) {
+    if !debug_config.animation_debug {
+        return;
+    }
+    
+    for anim_controller in animation_query.iter() {
+        info!(
+            "🎭 Animation state changed: {:?} -> {:?}", 
+            anim_controller.previous_state, 
+            anim_controller.current_state
+        );
     }
 }

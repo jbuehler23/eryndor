@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use avian3d::prelude::*;
 use super::{config::*, core::*, collision::*};
+use crate::resources::{GameDebugConfig, DebugTimer};
 
 /// Debug visualization configuration
 #[derive(Resource, Clone, Debug)]
