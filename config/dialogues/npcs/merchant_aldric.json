@@ -1,0 +1,228 @@
+{
+  "npc_id": "merchant_aldric",
+  "name": "Aldric Goldweaver",
+  "description": "A nervous merchant who has been acting strangely since returning from the northern routes",
+  "default_conversation": "greeting",
+  "conversations": {
+    "greeting": {
+      "title": "Initial Meeting",
+      "nodes": {
+        "start": {
+          "speaker": "npc",
+          "text": "Ah, welcome to my humble shop! Please, browse at your leisure...",
+          "emotion": "nervous",
+          "choices": [
+            {
+              "id": "browse_wares",
+              "text": "I'd like to see what you have for sale",
+              "next": "shop_menu",
+              "approach": "casual"
+            },
+            {
+              "id": "notice_nervousness", 
+              "text": "You seem troubled. Is everything alright?",
+              "next": "troubled_response",
+              "approach": "observant",
+              "requires": {
+                "skills": [{"skill": "observation", "level": 2}]
+              }
+            },
+            {
+              "id": "ask_about_travels",
+              "text": "I heard you recently returned from the northern routes. How was your journey?",
+              "next": "travel_story",
+              "approach": "inquisitive"
+            }
+          ]
+        },
+        "shop_menu": {
+          "speaker": "npc", 
+          "text": "Of course! I have fine wares from across the land. Though... some items are not for sale just yet.",
+          "emotion": "merchant",
+          "choices": [
+            {
+              "id": "examine_goods",
+              "text": "What kind of items are you keeping back?",
+              "next": "mysterious_goods",
+              "approach": "investigative"
+            },
+            {
+              "id": "normal_purchase",
+              "text": "I'll take a look at what's available",
+              "next": "end_conversation",
+              "approach": "casual"
+            }
+          ]
+        },
+        "troubled_response": {
+          "speaker": "npc",
+          "text": "Troubled? No, no... just the usual concerns of a merchant. Bandits on the roads, you know. Nothing more than that.",
+          "emotion": "defensive",
+          "choices": [
+            {
+              "id": "press_further",
+              "text": "Your hands are shaking. This seems like more than bandit concerns.",
+              "next": "reveal_fear",
+              "approach": "direct",
+              "requires": {
+                "skills": [{"skill": "observation", "level": 3}]
+              }
+            },
+            {
+              "id": "accept_explanation",
+              "text": "I understand. The roads can be dangerous.",
+              "next": "end_conversation",
+              "approach": "supportive"
+            },
+            {
+              "id": "offer_help",
+              "text": "If you need any help dealing with trouble, I might be able to assist.",
+              "next": "quest_hint",
+              "approach": "helpful"
+            }
+          ]
+        },
+        "travel_story": {
+          "speaker": "npc",
+          "text": "The journey was... eventful. I made excellent time, actually. Strange weather helped push me along faster than usual.",
+          "emotion": "evasive",
+          "clue_flags": ["travel_time_inconsistent"],
+          "choices": [
+            {
+              "id": "question_timing",
+              "text": "Faster than usual? But I heard the northern routes have been particularly difficult this season.",
+              "next": "caught_contradiction",
+              "approach": "analytical",
+              "requires": {
+                "knowledge": ["northern_trade_routes"]
+              }
+            },
+            {
+              "id": "ask_about_goods",
+              "text": "Did you acquire anything interesting on your travels?",
+              "next": "mysterious_goods",
+              "approach": "curious"
+            }
+          ]
+        },
+        "mysterious_goods": {
+          "speaker": "npc",
+          "text": "Ah, well... some items require special handling. Delicate fabrics, you understand. They need proper... preparation before display.",
+          "emotion": "secretive",
+          "clue_flags": ["hidden_goods_mentioned"],
+          "choices": [
+            {
+              "id": "examine_fabrics",
+              "text": "These fabrics look unusual. Northern wool with southern dyes?",
+              "next": "fabric_inconsistency", 
+              "approach": "investigative",
+              "requires": {
+                "skills": [{"skill": "investigation", "level": 2}],
+                "clues": ["examined_shop_goods"]
+              }
+            },
+            {
+              "id": "offer_to_wait",
+              "text": "I can wait if you'd like to prepare them properly.",
+              "next": "nervous_decline",
+              "approach": "patient"
+            }
+          ]
+        },
+        "caught_contradiction": {
+          "speaker": "npc",
+          "text": "I... well, you see... the weather was unusual this year! Very unusual indeed!",
+          "emotion": "panicked",
+          "clue_flags": ["contradiction_caught"],
+          "quest_progression": ["observe_merchant_behavior"],
+          "choices": [
+            {
+              "id": "press_advantage",
+              "text": "Aldric, I think you need to tell me what really happened on those routes.",
+              "next": "partial_confession",
+              "approach": "assertive"
+            },
+            {
+              "id": "let_it_slide",
+              "text": "Weather can certainly be unpredictable.",
+              "next": "end_conversation", 
+              "approach": "diplomatic"
+            }
+          ]
+        },
+        "quest_hint": {
+          "speaker": "npc",
+          "text": "You... you seem trustworthy. Perhaps... if you truly mean to help... there are strange things happening. Things that make an honest merchant question what's right and wrong.",
+          "emotion": "hopeful",
+          "choices": [
+            {
+              "id": "accept_quest",
+              "text": "I'd like to help. Tell me what's been troubling you.",
+              "next": "quest_start",
+              "approach": "heroic",
+              "quest_action": {
+                "type": "start_quest",
+                "quest_id": "the_merchants_mystery"
+              }
+            },
+            {
+              "id": "not_interested",
+              "text": "I'm sorry, but I can't get involved in complicated matters.",
+              "next": "end_conversation",
+              "approach": "cautious"
+            }
+          ]
+        },
+        "quest_start": {
+          "speaker": "npc",
+          "text": "Thank you! I... I've been carrying goods I shouldn't be carrying. Items that were given to me by hooded figures who promised great profits. But these items... they feel wrong. Evil, even.",
+          "emotion": "relieved",
+          "quest_action": {
+            "type": "quest_assigned",
+            "quest_id": "the_merchants_mystery",
+            "phase": "initial_observation"
+          },
+          "choices": [
+            {
+              "id": "learn_more",
+              "text": "Tell me more about these hooded figures.",
+              "next": "hooded_figures_info",
+              "approach": "investigative"
+            },
+            {
+              "id": "examine_items",
+              "text": "Can I examine these suspicious items?",
+              "next": "show_items",
+              "approach": "direct"
+            }
+          ]
+        },
+        "end_conversation": {
+          "speaker": "npc",
+          "text": "Safe travels, friend. May your path be free of the troubles that plague mine.",
+          "emotion": "farewell",
+          "choices": []
+        }
+      }
+    }
+  },
+  "relationship_effects": {
+    "trust_building": {
+      "helpful": 2,
+      "supportive": 1,
+      "diplomatic": 1,
+      "heroic": 3
+    },
+    "trust_damaging": {
+      "aggressive": -2,
+      "dismissive": -1,
+      "threatening": -3
+    }
+  },
+  "personality_traits": {
+    "nervous_disposition": 0.8,
+    "merchant_instincts": 0.6,
+    "guilt_burden": 0.9,
+    "desperation_level": 0.7
+  }
+}

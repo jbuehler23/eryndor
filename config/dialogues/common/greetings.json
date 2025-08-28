@@ -1,0 +1,62 @@
+{
+  "description": "Common greeting phrases used by various NPCs",
+  "phrases": {
+    "generic_greeting": {
+      "speaker": "npc",
+      "text": "Hello there, traveler! What brings you to these parts?",
+      "emotion": "friendly",
+      "choices": [
+        {
+          "id": "just_passing_through",
+          "text": "Just passing through.",
+          "next": "end_conversation",
+          "approach": "casual"
+        },
+        {
+          "id": "looking_around",
+          "text": "I'm exploring the area.",
+          "next": "exploration_response",
+          "approach": "curious"
+        }
+      ]
+    },
+    "merchant_greeting": {
+      "speaker": "npc", 
+      "text": "Welcome to my establishment! Fine goods for discerning customers!",
+      "emotion": "enthusiastic",
+      "choices": [
+        {
+          "id": "browse_wares",
+          "text": "I'd like to see your wares.",
+          "next": "shop_menu",
+          "approach": "business"
+        },
+        {
+          "id": "just_looking",
+          "text": "Just browsing, thanks.",
+          "next": "end_conversation", 
+          "approach": "polite"
+        }
+      ]
+    },
+    "guard_greeting": {
+      "speaker": "npc",
+      "text": "Halt! State your business in this area.",
+      "emotion": "authoritative",
+      "choices": [
+        {
+          "id": "peaceful_traveler",
+          "text": "I'm just a peaceful traveler.",
+          "next": "guard_assessment",
+          "approach": "compliant"
+        },
+        {
+          "id": "none_of_your_business",
+          "text": "That's none of your concern.",
+          "next": "guard_hostile",
+          "approach": "defiant"
+        }
+      ]
+    }
+  }
+}

@@ -218,37 +218,38 @@ This document serves as a comprehensive tracker of all game systems within Erynd
 
 ## Combat Systems
 
-### Target Selection
+### Basic Combat Framework
 
-**Status**: 📋 Planned  
-**Technology**: Ray casting with UI integration  
-**Location**: To be implemented in `src/systems/combat/targeting.rs`
-
-**Components**:
-- Tab-targeting with priority logic
-- Click-to-target with 3D cursor projection
-- Area targeting with ground reticles
-- Target information display and validation
-
-**Dependencies**: Physics system, UI system, Camera system  
-**Integration Points**: Combat abilities, Auto-attack system, Group coordination
-
----
-
-### Auto-Attack System
-
-**Status**: 📋 Planned  
-**Technology**: Timer-based with animation integration  
-**Location**: To be implemented in `src/systems/combat/auto_attack.rs`
+**Status**: ✅ Implemented (Foundation)  
+**Technology**: Component-based combat with timer systems  
+**Location**: `src/systems/combat.rs`
 
 **Components**:
-- Weapon-specific attack intervals and damage
-- Animation synchronization with hit detection
-- Critical hit calculation and visual feedback
-- Resource generation from successful attacks
+- **Health System**: Component-based health with damage/healing methods
+- **Enemy System**: Multiple enemy types with configurable stats
+- **Target Selection**: Tab-targeting with distance-based priority and cycling
+- **Auto-Attack System**: Timer-based attacks with configurable damage and speed
+- **Combat State Management**: Global combat state tracking and target management
+- **Visual Feedback**: Target indicators and health bars using Gizmos
+- **Enemy AI**: Basic enemy spawning and management
 
-**Dependencies**: Target selection, Animation system, Damage calculation  
-**Integration Points**: Ability system, Visual effects, Sound system
+**Dependencies**: Physics system, Transform system, Timer system  
+**Integration Points**: Character progression (experience rewards), Animation system (planned), UI system
+
+**Key Features**:
+- Tab-targeting with intelligent enemy selection
+- Distance-based target validation and range checking
+- Auto-attack with configurable intervals and damage
+- Health visualization with floating health bars
+- Experience rewards on enemy defeat
+- Multiple enemy types (Forest Guardian, Rock Elemental, Wild Boar)
+
+**Missing Features**:
+- Advanced abilities and hotbar system
+- Status effects and buff/debuff system
+- Damage type system with resistances
+- Animation integration with attacks
+- Sound effects and visual effects
 
 ---
 
@@ -373,35 +374,49 @@ This document serves as a comprehensive tracker of all game systems within Erynd
 
 ### Dialogue System
 
-**Status**: 💭 Conceptual  
-**Technology**: Node-based with JSON configuration  
-**Location**: To be implemented in `src/systems/dialogue/`
+**Status**: ✅ Implemented (Advanced)  
+**Technology**: Complex personality-driven system with JSON configuration  
+**Location**: `src/systems/dialogue.rs`, `src/components/quest.rs`
 
 **Components**:
-- Branching dialogue trees with conditions
-- Voice/text integration with audio system
-- Quest integration and objective updating
-- Reputation and relationship tracking
+- Advanced dialogue trees with personality modifiers and emotional states
+- Branching conversations with trust level requirements
+- NPC personality system with speech patterns and verbose factors
+- Conversation history tracking and relationship building
+- Consequence system affecting future dialogue availability
+- Trust-based dialogue unlocking with relationship requirements
+- Time and location-based conversation restrictions
 
-**Dependencies**: NPC system, Audio system, Quest system  
-**Integration Points**: Quest progression, Character relationships, World lore
+**Dependencies**: Quest system, Personality system, JSON configuration  
+**Integration Points**: Quest progression, Investigation mechanics, Character relationships, Lore delivery
 
 ## Quest and Objective System
 
 ### Quest Framework
 
-**Status**: 💭 Conceptual  
-**Technology**: Objective-based with JSON configuration  
-**Location**: To be implemented in `src/systems/quest/`
+**Status**: ✅ Implemented (Advanced Investigation System)  
+**Technology**: Lore-rich investigation-based system with JSON configuration  
+**Location**: `src/systems/quest.rs`, `src/components/quest.rs`, `config/quests.json`
 
 **Components**:
-- Quest definition and objective tracking
-- Dynamic quest generation and scaling
-- Reward calculation and distribution
-- Quest journal and UI integration
+- **Advanced Quest Definitions**: Multi-phase narrative progression with complex investigation mechanics
+- **Evidence Gathering System**: Strength-based clue collection requiring reading comprehension
+- **Investigation Mechanics**: Players must deduce solutions through evidence analysis
+- **Quest Phase Progression**: Dynamic phase unlocking based on evidence strength
+- **Hypothesis Validation**: Multiple solution paths with consequence tracking
+- **Lore Integration**: Deep world-building through text-based discovery
+- **Quest Database**: JSON-based quest definitions with validation and error handling
 
-**Dependencies**: NPC system, Inventory system, Character progression  
-**Integration Points**: Experience rewards, Item rewards, World state changes
+**Dependencies**: Dialogue system, JSON configuration, Investigation components  
+**Integration Points**: NPC conversations, Evidence collection, Character progression, World lore delivery
+
+**Key Features**:
+- Text-based gameplay requiring careful reading
+- No quest markers or hand-holding mechanics  
+- Evidence strength calculation system
+- Multi-phase investigation structure
+- Player note-taking and hypothesis tracking
+- Consequence system affecting quest outcomes
 
 ## Crafting and Economy
 
@@ -585,18 +600,28 @@ This document serves as a comprehensive tracker of all game systems within Erynd
 
 ### Debug Systems
 
-**Status**: ✅ Implemented (Basic)  
-**Technology**: Debug overlays with keyboard controls  
-**Location**: Various debug systems throughout codebase
+**Status**: ✅ Implemented (Advanced Configurable System)  
+**Technology**: Comprehensive configurable debug system with timing controls  
+**Location**: `src/resources/debug_config.rs`, integrated throughout codebase
 
 **Components**:
-- Character progression debug displays
-- Physics collision visualization
-- Performance metrics overlays
-- Development cheat codes and utilities
+- **Configurable Debug Categories**: Collision, Input, Animation, Slide/Movement, Performance, Quest, Physics Visual
+- **Smart Timing Control**: Debug update intervals with spam prevention (default 2-second intervals)
+- **Movement-Only Mode**: Only logs debug info when player is actually moving
+- **Keyboard Controls**: F1-F4 for individual category toggles, Shift combinations for bulk operations
+- **Debug Modes**: Production mode (minimal logging), Development mode (enhanced logging)  
+- **Help System**: F10 displays all available debug controls and current settings
+- **Integration**: All major systems respect debug configuration flags
+- **Spam Prevention**: DebugTimer resource prevents excessive console output
 
-**Dependencies**: UI system, Input system  
-**Integration Points**: All systems for debugging, Development workflow
+**Dependencies**: Input system, All major game systems for debug integration  
+**Integration Points**: All systems support configurable debug output, Development workflow optimization
+
+**Key Features**:
+- Granular control over debug categories
+- Performance-conscious debug logging
+- Developer productivity enhancements
+- Production-ready debug controls
 
 ---
 
@@ -617,17 +642,22 @@ This document serves as a comprehensive tracker of all game systems within Erynd
 
 ## Implementation Priority Matrix
 
-### Phase 2 (Current Priority)
-1. **Combat Systems**: Target selection, Auto-attack, Basic abilities
-2. **Inventory System**: Grid-based inventory with drag-and-drop
-3. **NPC Foundation**: Static NPCs with basic dialogue
-4. **Audio Integration**: 3D positional audio framework
+### Phase 2 (Currently 90% Complete - Narrative Focus)
+**✅ Completed**:
+1. **Quest System**: ✅ Advanced investigation mechanics with evidence gathering
+2. **Dialogue System**: ✅ Personality-driven NPCs with branching conversations  
+3. **Combat Foundation**: ✅ Basic target selection, auto-attack, enemy management
+4. **Debug System**: ✅ Comprehensive configurable logging system
 
-### Phase 3 (Next Quarter)
-1. **Quest System**: Basic objective tracking and rewards
-2. **Crafting System**: Simple recipe-based crafting
-3. **Trading System**: Player-to-player exchange
-4. **Advanced Combat**: Status effects and combo system
+**🔧 In Progress**:
+1. **Quest Journal UI**: Rich text display and note-taking functionality
+2. **Advanced NPC Personalities**: Unique dialogue voices and relationship tracking
+
+### Phase 3 (Next Priority - User Experience)
+1. **Inventory System**: Quest item management and equipment visualization
+2. **Audio Integration**: Atmospheric audio for narrative immersion
+3. **Advanced Combat**: Ability hotbar system and status effects
+4. **Consequence System**: Player choice tracking and world state changes
 
 ### Phase 4 (Multiplayer Foundation)
 1. **Networking**: Client-server implementation with Lightyear

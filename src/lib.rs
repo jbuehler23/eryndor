@@ -47,6 +47,7 @@ impl Plugin for EryndorPlugin {
                 setup_ui,
                 load_initial_assets,
                 load_quest_database,
+                load_dialogue_database,
             ))
             
             // Main menu systems - only in MainMenu state
@@ -62,6 +63,17 @@ impl Plugin for EryndorPlugin {
                 handle_ingame_escape,
             ).run_if(in_state(GameState::InGame)))
             .add_systems(OnExit(GameState::InGame), cleanup_ingame_ui)
+            
+            // Quest Journal UI systems - only in InGame state
+            .init_resource::<QuestJournalState>()
+            .add_systems(Update, (
+                toggle_quest_journal,
+                manage_quest_journal_state,
+                handle_journal_tab_switching,
+                handle_quest_selection,
+                update_quest_journal_content.after(manage_quest_journal_state),
+                cleanup_quest_journal,
+            ).run_if(in_state(GameState::InGame)))
             
             // Combat systems - only in InGame state
             .add_systems(Update, (
@@ -107,11 +119,19 @@ impl Plugin for EryndorPlugin {
             ).run_if(in_state(GameState::InGame)))
             .add_event::<QuestEvent>()
             
-            // Dialogue systems - only in InGame state
-            .add_systems(OnEnter(GameState::InGame), setup_dialogue_system)
+            // Enhanced Dialogue systems - only in InGame state
+            .add_systems(OnEnter(GameState::InGame), (
+                setup_dialogue_system,
+                spawn_demo_npcs.after(load_dialogue_database),
+            ))
             .add_systems(Update, (
-                dialogue_interaction_system,
-                dialogue_help_system,
+                enhanced_dialogue_interaction_system,
+                process_dialogue_choice,
+                enhanced_dialogue_help_system,
+                hot_reload_dialogue_system,
+                update_npc_indicators,
+                npc_interaction_prompts,
+                debug_npc_info,
             ).run_if(in_state(GameState::InGame)))
             .add_event::<DialogueEvent>()
             // Animation and camera systems - only in InGame state
