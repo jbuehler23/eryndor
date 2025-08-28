@@ -11,7 +11,7 @@ use systems::*;
 use resources::*;
 use states::*;
 use components::quest::QuestEvent;
-use systems::dialogue::DialogueEvent;
+use components::dialogue::DialogueEvent;
 
 // Re-export logging setup function for main.rs
 pub use systems::logging::setup_logging;
@@ -23,9 +23,9 @@ impl Plugin for EryndorPlugin {
         app
             // Physics - Avian 3D integration
             .add_plugins(PhysicsPlugins::default())
-            .add_plugins(PhysicsDiagnosticsPlugin) // Enable physics diagnostics overlay
-            .add_plugins(PhysicsDiagnosticsUiPlugin) // UI for toggling physics debug features
-            .add_plugins(avian3d::debug_render::PhysicsDebugPlugin::default()) // Enable collision shape visualization
+            // .add_plugins(PhysicsDiagnosticsPlugin) // Enable physics diagnostics overlay
+            // .add_plugins(PhysicsDiagnosticsUiPlugin) // UI for toggling physics debug features
+            // .add_plugins(avian3d::debug_render::PhysicsDebugPlugin::default()) // Enable collision shape visualization
             .insert_resource(Gravity(Vec3::NEG_Y * 9.81)) // Earth-like gravity
             
             // Character controller - Simple MMO-style kinematic controller
@@ -121,7 +121,6 @@ impl Plugin for EryndorPlugin {
             
             // Enhanced Dialogue systems - only in InGame state
             .add_systems(OnEnter(GameState::InGame), (
-                setup_dialogue_system,
                 spawn_demo_npcs.after(load_dialogue_database),
             ))
             .add_systems(Update, (
@@ -129,7 +128,8 @@ impl Plugin for EryndorPlugin {
                 process_dialogue_choice,
                 enhanced_dialogue_help_system,
                 hot_reload_dialogue_system,
-                update_npc_indicators,
+                npc_mouse_hover_system,
+                update_npc_indicators.after(npc_mouse_hover_system),
                 npc_interaction_prompts,
                 debug_npc_info,
             ).run_if(in_state(GameState::InGame)))

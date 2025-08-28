@@ -20,7 +20,7 @@ pub mod ingame_ui;
 pub mod combat;
 pub mod quest;
 pub mod quest_journal_ui;
-pub mod dialogue;
+// pub mod dialogue; // REMOVED - obsolete hard-coded dialogue system
 pub mod dialogue_loader;
 pub mod dialogue_interaction;
 pub mod npc_spawning;
@@ -47,7 +47,7 @@ pub use ingame_ui::*;
 pub use combat::*;
 pub use quest::*;
 pub use quest_journal_ui::*;
-pub use dialogue::*;
+// pub use dialogue::*; // REMOVED - obsolete hard-coded dialogue system
 pub use dialogue_loader::*;
 pub use dialogue_interaction::*;
 pub use npc_spawning::*;

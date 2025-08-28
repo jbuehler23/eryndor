@@ -290,26 +290,18 @@ pub enum InformationImportance {
     WorldChanging,
 }
 
-/// System to initialize dialogue for NPCs
-pub fn setup_dialogue_system(mut commands: Commands) {
-    info!("💬 Initializing dialogue system");
-    
-    // Create sample conversation for Aldric the merchant
-    let aldric_conversation = create_aldric_conversation();
-    let mut conversations = HashMap::new();
-    conversations.insert("aldric_mystery_talk".to_string(), aldric_conversation);
-    
-    let dialogue_db = DialogueDatabase {
-        conversations,
-        npc_default_conversations: HashMap::new(),
-        lore_database: create_sample_lore_database(),
-    };
-    
-    commands.insert_resource(dialogue_db);
-    info!("📚 Dialogue database initialized with sample conversations");
-}
+/// Legacy Note: This file contains obsolete hard-coded dialogue functions.
+/// All dialogue content is now dynamically loaded from JSON files in config/dialogues/
+/// 
+/// TODO: This entire system should be cleaned up since we use:
+/// - dialogue_loader.rs for JSON loading
+/// - dialogue_interaction.rs for player interaction  
+/// - components/dialogue.rs for data structures
+///
+/// This file is kept temporarily for any remaining component definitions
+/// but the conversation creation functions are deprecated.
 
-fn create_aldric_conversation() -> ConversationTree {
+// === DEPRECATED FUNCTIONS BELOW - REMOVE IN CLEANUP ===
     let mut nodes = HashMap::new();
     
     // Start node - initial greeting

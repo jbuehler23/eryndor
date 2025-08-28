@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::window::PrimaryWindow;
 use crate::components::dialogue::*;
 use avian3d::prelude::*;
 
@@ -27,11 +28,11 @@ pub fn spawn_demo_npcs(
                 npc_id: "merchant_aldric".to_string(),
                 display_name: "Aldric Goldweaver".to_string(),
                 description: "A nervous merchant with mysterious goods".to_string(),
-                position: Vec3::new(10.0, 1.0, 5.0),
+                position: Vec3::new(-65.0, 16.0, -68.0), // Close to player spawn
                 npc_type: NpcType::Merchant,
                 shape_color: Color::srgb(0.2, 0.8, 0.4), // Green for merchant
                 scale: 1.2,
-                interaction_range: 4.0,
+                interaction_range: 6.0, // Generous range for easy interaction
             }
         );
     }
@@ -45,11 +46,11 @@ pub fn spawn_demo_npcs(
             npc_id: "town_guard".to_string(),
             display_name: "Town Guard".to_string(),
             description: "A watchful guard keeping order".to_string(),
-            position: Vec3::new(-5.0, 1.0, -8.0),
+            position: Vec3::new(-72.0, 16.0, -65.0), // Close to player spawn
             npc_type: NpcType::Guard,
             shape_color: Color::srgb(0.4, 0.4, 0.8), // Blue for guard
             scale: 1.0,
-            interaction_range: 3.0,
+            interaction_range: 5.0, // Generous range for easy interaction
         }
     );
     
@@ -62,11 +63,11 @@ pub fn spawn_demo_npcs(
             npc_id: "village_elder".to_string(),
             display_name: "Village Elder".to_string(),
             description: "An wise elder with many stories".to_string(),
-            position: Vec3::new(0.0, 1.0, 12.0),
+            position: Vec3::new(-68.0, 16.0, -72.0), // Close to player spawn
             npc_type: NpcType::Villager,
             shape_color: Color::srgb(0.8, 0.6, 0.2), // Yellow for villager
             scale: 0.9,
-            interaction_range: 3.5,
+            interaction_range: 5.5, // Generous range for easy interaction
         }
     );
     
@@ -155,6 +156,9 @@ fn spawn_npc(
             material_handle,
             base_color: spawn_info.shape_color,
         },
+        
+        // Hover state tracking
+        NpcHoverState::default(),
     )).id();
     
     // Add floating name tag (simple text above NPC) - TODO: Implement 3D text later
@@ -178,9 +182,57 @@ pub struct NpcMaterial {
     pub base_color: Color,
 }
 
-/// System to update NPC visual indicators based on interaction state
+/// Component to track NPC hover state
+#[derive(Component, Default)]
+pub struct NpcHoverState {
+    pub is_hovered: bool,
+    pub is_interactable: bool,
+}
+
+/// System to handle mouse hover detection for NPCs
+pub fn npc_mouse_hover_system(
+    windows: Query<&Window, With<PrimaryWindow>>,
+    cameras: Query<(&Camera, &GlobalTransform)>,
+    mut npc_query: Query<(&Transform, &mut NpcHoverState, &DialogueInteractable), With<NpcMaterial>>,
+    player_query: Query<&Transform, With<crate::components::Player>>,
+) {
+    let Ok(window) = windows.single() else { return; };
+    let Ok((camera, camera_transform)) = cameras.single() else { return; };
+    let Ok(player_transform) = player_query.single() else { return; };
+    
+    // Get cursor position
+    let Some(cursor_position) = window.cursor_position() else { return; };
+    
+    // Convert cursor to world ray
+    let Ok(ray) = camera.viewport_to_world(camera_transform, cursor_position) else { return; };
+    
+    // Check each NPC for mouse hover
+    for (npc_transform, mut hover_state, interactable) in &mut npc_query {
+        let npc_pos = npc_transform.translation;
+        let player_distance = player_transform.translation.distance(npc_pos);
+        
+        // Check if mouse ray intersects with NPC (simplified sphere check)
+        let ray_to_npc = npc_pos - ray.origin;
+        let ray_dir = *ray.direction; // Convert Dir3 to Vec3
+        let projection_length = ray_to_npc.dot(ray_dir);
+        let closest_point = ray.origin + ray_dir * projection_length;
+        let distance_to_ray = npc_pos.distance(closest_point);
+        
+        // NPC hover detection (within 1.5 units of the ray and reasonable distance along ray)
+        let was_hovered = hover_state.is_hovered;
+        hover_state.is_hovered = distance_to_ray < 1.5 && projection_length > 0.0 && projection_length < 100.0;
+        hover_state.is_interactable = player_distance <= interactable.interaction_range;
+        
+        // Log hover state changes
+        if hover_state.is_hovered && !was_hovered {
+            info!("🖱️ Mouse hovering over NPC at {:?}", npc_pos);
+        }
+    }
+}
+
+/// System to update NPC visual indicators based on interaction and hover state
 pub fn update_npc_indicators(
-    npc_query: Query<(&Transform, &DialogueInteractable, &NpcMaterial), Without<crate::components::Player>>,
+    npc_query: Query<(&Transform, &DialogueInteractable, &NpcMaterial, &NpcHoverState), Without<crate::components::Player>>,
     player_query: Query<&Transform, With<crate::components::Player>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
@@ -188,16 +240,25 @@ pub fn update_npc_indicators(
         return;
     };
     
-    for (npc_transform, interactable, npc_material) in &npc_query {
+    for (npc_transform, interactable, npc_material, hover_state) in &npc_query {
         let distance = player_transform.translation.distance(npc_transform.translation);
         
         if let Some(material) = materials.get_mut(&npc_material.material_handle) {
-            // Change NPC color when player is in interaction range
-            if distance <= interactable.interaction_range {
-                // Brighten the NPC when in range
-                material.emissive = LinearRgba::new(0.3, 0.3, 0.3, 1.0);
+            // Determine highlight based on hover and interaction state
+            if hover_state.is_hovered {
+                // Mouse hovering - bright highlight
+                if hover_state.is_interactable {
+                    // Can interact - bright green glow
+                    material.emissive = LinearRgba::new(0.0, 0.8, 0.0, 1.0);
+                } else {
+                    // Too far to interact - yellow glow
+                    material.emissive = LinearRgba::new(0.8, 0.8, 0.0, 1.0);
+                }
+            } else if distance <= interactable.interaction_range {
+                // In range but not hovering - subtle glow
+                material.emissive = LinearRgba::new(0.2, 0.2, 0.2, 1.0);
             } else {
-                // Normal color when out of range
+                // Normal color when out of range and not hovering
                 material.emissive = LinearRgba::new(0.0, 0.0, 0.0, 1.0);
             }
         }

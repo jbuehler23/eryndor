@@ -4,7 +4,7 @@ use crate::components::{Player, QuestLog, CharacterSkills};
 
 /// System to handle starting conversations with NPCs
 pub fn enhanced_dialogue_interaction_system(
-    mut commands: Commands,
+    _commands: Commands,
     keyboard: Res<ButtonInput<KeyCode>>,
     dialogue_db: Res<DialogueDatabase>,
     mut active_dialogue: ResMut<ActiveDialogue>,
@@ -12,7 +12,6 @@ pub fn enhanced_dialogue_interaction_system(
     player_query: Query<(Entity, &Transform), With<Player>>,
     mut npc_dialogue_query: Query<&mut DialogueState>,
     npc_query: Query<(Entity, &Transform, &DialogueInteractable), Without<Player>>,
-    mut interaction_query: Query<&mut DialogueInteractable>,
 ) {
     let Ok((player_entity, player_transform)) = player_query.single() else {
         return;
@@ -77,8 +76,7 @@ pub fn enhanced_dialogue_interaction_system(
         handle_choice_selection(&keyboard, &mut active_dialogue, &mut dialogue_events);
     }
     
-    // Update interaction indicators
-    update_interaction_indicators(&player_transform, &mut interaction_query, &npc_query);
+    // Update interaction indicators - moved to separate system to avoid query conflicts
 }
 
 /// Start a conversation with an NPC
@@ -276,22 +274,7 @@ fn end_current_dialogue(active_dialogue: &mut ResMut<ActiveDialogue>) {
     active_dialogue.dialogue_history.clear();
 }
 
-/// Update visual indicators for nearby NPCs
-fn update_interaction_indicators(
-    player_transform: &Transform,
-    _interaction_query: &mut Query<&mut DialogueInteractable>,
-    npc_query: &Query<(Entity, &Transform, &DialogueInteractable), Without<Player>>,
-) {
-    for (_, npc_transform, interactable) in npc_query {
-        let distance = player_transform.translation.distance(npc_transform.translation);
-        
-        // For now, we'll just log when NPCs are in range
-        // TODO: Implement visual indicators (floating text, highlight, etc.)
-        if distance <= interactable.interaction_range {
-            // NPC is in interaction range - we could add visual feedback here
-        }
-    }
-}
+// Visual indicators are now handled by the NPC spawning system to avoid query conflicts
 
 /// System to provide help text for dialogue system
 pub fn enhanced_dialogue_help_system(
