@@ -1,0 +1,1 @@
+//! Placeholder for eryndor-character-controller crate

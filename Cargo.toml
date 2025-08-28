@@ -1,22 +1,23 @@
-[package]
-name = "eryndor"
-version = "0.1.0"
-edition = "2021"
-description = "A fantasy MMO built with Bevy and Rust"
-authors = ["Joe"]
-default-run = "eryndor"
+[workspace]
+members = [
+    "crates/eryndor-core",
+    "crates/eryndor-config", 
+    "crates/eryndor-dialogue",
+    "crates/eryndor-progression",
+    "crates/eryndor-quest",
+    "crates/eryndor-character-controller",
+    "crates/eryndor-ui",
+    "crates/eryndor-game",
+]
+resolver = "2"
 
-[dependencies]
+[workspace.dependencies]
 # Core game engine with explicit GLTF support  
 bevy = { version = "0.16", features = ["default", "bevy_gltf"] }
 bevy_animation = "0.16"
 
 # Physics and collision detection - Avian (future official Bevy physics)
 avian3d = { version = "0.3", features = ["collider-from-mesh", "diagnostic_ui", "bevy_diagnostic"] }
-
-# Removed Tnua - implementing custom Avian3D character controller
-# bevy-tnua = "0.24" 
-# bevy-tnua-avian3d = "0.5"
 
 # Networking for multiplayer
 lightyear = "0.18"
@@ -58,8 +59,7 @@ tracing-subscriber = "0.3"
 anyhow = "1.0"
 thiserror = "1.0"
 
-[dev-dependencies]
-# Testing utilities
+# Development tools
 bevy_dev_tools = "0.16"
 
 # Fast compiles configuration for development
@@ -76,10 +76,6 @@ codegen-units = 1
 panic = "abort"
 
 # Profile for WASM builds
-[[bin]]
-name = "gltf_inspector"
-path = "src/bin/gltf_inspector.rs"
-
 [profile.wasm-release]
 inherits = "release"
 opt-level = "s"

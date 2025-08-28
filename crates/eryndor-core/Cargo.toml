@@ -1,0 +1,14 @@
+[package]
+name = "eryndor-core"
+version = "0.1.0"
+edition = "2021"
+description = "Core traits, events, and shared components for the Eryndor game engine"
+authors = ["Joe"]
+
+[dependencies]
+bevy = { workspace = true }
+avian3d = { workspace = true }
+serde = { workspace = true }
+uuid = { workspace = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }

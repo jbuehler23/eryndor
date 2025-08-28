@@ -1,0 +1,17 @@
+[package]
+name = "eryndor-dialogue"
+version = "0.1.0"
+edition = "2021"
+description = "Dialogue system for Eryndor game engine with JSON-driven conversation trees"
+authors = ["Joe"]
+
+[dependencies]
+eryndor-core = { path = "../eryndor-core" }
+eryndor-config = { path = "../eryndor-config" }
+bevy = { workspace = true }
+avian3d = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }

@@ -395,9 +395,9 @@ dependencies = [
 
 [[package]]
 name = "async-compat"
-version = "0.2.4"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7bab94bde396a3f7b4962e396fdad640e241ed797d4d8d77fc8c237d14c58fc0"
+checksum = "a1ba85bc55464dcbf728b56d97e119d673f4cf9062be330a9a26f3acf504a590"
 dependencies = [
  "futures-core",
  "futures-io",
@@ -3744,7 +3744,52 @@ dependencies = [
 ]
 
 [[package]]
-name = "eryndor"
+name = "eryndor-character-controller"
+version = "0.1.0"
+
+[[package]]
+name = "eryndor-config"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "config",
+ "eryndor-core",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 1.0.69",
+ "tracing",
+]
+
+[[package]]
+name = "eryndor-core"
+version = "0.1.0"
+dependencies = [
+ "avian3d",
+ "bevy 0.16.1",
+ "serde",
+ "thiserror 1.0.69",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "eryndor-dialogue"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "avian3d",
+ "bevy 0.16.1",
+ "eryndor-config",
+ "eryndor-core",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tracing",
+]
+
+[[package]]
+name = "eryndor-game"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -3755,6 +3800,9 @@ dependencies = [
  "bevy_dev_tools",
  "chrono",
  "config",
+ "eryndor-config",
+ "eryndor-core",
+ "eryndor-dialogue",
  "lightyear",
  "noise",
  "rand",
@@ -3768,6 +3816,18 @@ dependencies = [
  "tracing-subscriber",
  "uuid",
 ]
+
+[[package]]
+name = "eryndor-progression"
+version = "0.1.0"
+
+[[package]]
+name = "eryndor-quest"
+version = "0.1.0"
+
+[[package]]
+name = "eryndor-ui"
+version = "0.1.0"
 
 [[package]]
 name = "etcetera"
@@ -3946,9 +4006,9 @@ checksum = "aa9a19cbb55df58761df49b23516a86d432839add4af60fc256da840f66ed35b"
 
 [[package]]
 name = "form_urlencoded"
-version = "1.2.1"
+version = "1.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e13624c2627564efccf4934284bdd98cbaa14e79b0b5a141218e507b3a823456"
+checksum = "cb4cb245038516f5f85277875cdaa4f7d2c9a0fa0468de06ed190163b1581fcf"
 dependencies = [
  "percent-encoding",
 ]
@@ -4605,9 +4665,9 @@ dependencies = [
 
 [[package]]
 name = "idna"
-version = "1.0.3"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "686f825264d630750a544639377bae737628043f20d38bbc029e8f29ea968a7e"
+checksum = "3b0875f23caa03898994f6ddc501886a45c7d3d62d04d2d90788d47be1b1e4de"
 dependencies = [
  "idna_adapter",
  "smallvec",
@@ -4703,9 +4763,9 @@ dependencies = [
 
 [[package]]
 name = "io-uring"
-version = "0.7.9"
+version = "0.7.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d93587f37623a1a17d94ef2bc9ada592f5465fe7732084ab7beefabe5c77c0c4"
+checksum = "046fa2d4d00aea763528b4950358d0ead425372445dc8ff86312b3c69ff7727b"
 dependencies = [
  "bitflags 2.9.2",
  "cfg-if",
@@ -7257,6 +7317,19 @@ dependencies = [
  "grid 0.15.0",
  "serde",
  "slotmap",
+]
+
+[[package]]
+name = "tempfile"
+version = "3.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "15b61f8f20e3a6f7e0649d825294eaf317edce30f82cf6026e7e4cb9222a7d1e"
+dependencies = [
+ "fastrand",
+ "getrandom 0.3.3",
+ "once_cell",
+ "rustix 1.0.8",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
