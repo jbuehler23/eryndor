@@ -8,7 +8,7 @@ use crate::resources::*;
 
 /// System to load dialogue database from JSON files
 pub fn load_dialogue_database(mut commands: Commands) {
-    info!("📚 Loading dialogue database from configuration files");
+    info!("Loading dialogue database from configuration files");
     
     let dialogue_base_path = "config/dialogues";
     let mut dialogue_database = DialogueDatabase::default();
@@ -24,17 +24,17 @@ pub fn load_dialogue_database(mut commands: Commands) {
                         Ok(npc_dialogue) => {
                             let npc_id = npc_dialogue.npc_id.clone();
                             dialogue_database.npcs.insert(npc_id.clone(), npc_dialogue);
-                            info!("✅ Loaded NPC dialogue: {}", npc_id);
+                            info!("Loaded NPC dialogue: {}", npc_id);
                         }
                         Err(e) => {
-                            error!("❌ Failed to load dialogue file {:?}: {}", file_path, e);
+                            error!("Failed to load dialogue file {:?}: {}", file_path, e);
                         }
                     }
                 }
             }
         }
     } else {
-        warn!("⚠️ NPC dialogue directory not found: {:?}", npc_path);
+        warn!("NPC dialogue directory not found: {:?}", npc_path);
     }
     
     // Load common dialogue files
@@ -47,10 +47,10 @@ pub fn load_dialogue_database(mut commands: Commands) {
                     match load_common_dialogue_file(&file_path) {
                         Ok(common_nodes) => {
                             dialogue_database.common_phrases.extend(common_nodes);
-                            info!("✅ Loaded common dialogue: {}", file_name);
+                            info!("Loaded common dialogue: {}", file_name);
                         }
                         Err(e) => {
-                            error!("❌ Failed to load common dialogue file {:?}: {}", file_path, e);
+                            error!("Failed to load common dialogue file {:?}: {}", file_path, e);
                         }
                     }
                 }
@@ -64,7 +64,7 @@ pub fn load_dialogue_database(mut commands: Commands) {
     commands.insert_resource(dialogue_database);
     commands.insert_resource(ActiveDialogue::default());
     
-    info!("🎭 Dialogue database loaded with {} NPCs and {} common phrases", npc_count, common_count);
+    info!("Dialogue database loaded with {} NPCs and {} common phrases", npc_count, common_count);
 }
 
 /// Load an individual NPC dialogue file
@@ -92,7 +92,7 @@ fn load_common_dialogue_file(file_path: &Path) -> Result<std::collections::HashM
                     common_phrases.insert(phrase_id.clone(), dialogue_node);
                 }
                 Err(e) => {
-                    warn!("❌ Failed to parse common phrase {}: {}", phrase_id, e);
+                    warn!("Failed to parse common phrase {}: {}", phrase_id, e);
                 }
             }
         }
@@ -128,7 +128,7 @@ fn validate_npc_dialogue(npc_dialogue: &NpcDialogue) -> Result<(), Box<dyn std::
             for choice in &node.choices {
                 if !choice.next.is_empty() && !conversation.nodes.contains_key(&choice.next) && choice.next != "end_conversation" {
                     warn!(
-                        "⚠️ Choice '{}' in node '{}' of conversation '{}' references non-existent node '{}'",
+                        "Choice '{}' in node '{}' of conversation '{}' references non-existent node '{}'",
                         choice.id, node_id, conversation_id, choice.next
                     );
                 }
@@ -146,7 +146,7 @@ pub fn hot_reload_dialogue_system(
 ) {
     // F10 key for hot reloading dialogues
     if keyboard.just_pressed(KeyCode::F10) {
-        info!("🔄 Hot reloading dialogue database...");
+        info!("Hot reloading dialogue database...");
         
         // Clear existing dialogue
         dialogue_db.npcs.clear();
@@ -165,10 +165,10 @@ pub fn hot_reload_dialogue_system(
                             Ok(npc_dialogue) => {
                                 let npc_id = npc_dialogue.npc_id.clone();
                                 dialogue_db.npcs.insert(npc_id.clone(), npc_dialogue);
-                                info!("✅ Reloaded NPC dialogue: {}", npc_id);
+                                info!("Reloaded NPC dialogue: {}", npc_id);
                             }
                             Err(e) => {
-                                error!("❌ Failed to reload dialogue file {:?}: {}", file_path, e);
+                                error!("Failed to reload dialogue file {:?}: {}", file_path, e);
                             }
                         }
                     }
@@ -176,7 +176,7 @@ pub fn hot_reload_dialogue_system(
             }
         }
         
-        info!("✅ Dialogue database hot reload completed!");
+        info!("Dialogue database hot reload completed!");
     }
 }
 
