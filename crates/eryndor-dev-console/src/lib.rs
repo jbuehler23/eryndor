@@ -48,6 +48,8 @@ impl Plugin for EryndorDevConsolePlugin {
                 commands::process_teleport_commands,
                 commands::process_speed_commands,
                 commands::process_godmode_commands,
+                commands::process_spawn_npc_commands,
+                commands::process_delete_entity_commands,
             ))
             
             // Command registration

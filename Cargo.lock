@@ -3781,6 +3781,7 @@ dependencies = [
  "bevy 0.16.1",
  "eryndor-config",
  "eryndor-core",
+ "eryndor-dialogue",
  "serde",
  "serde_json",
  "thiserror 1.0.69",

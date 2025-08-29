@@ -8,6 +8,7 @@ authors = ["Joe"]
 [dependencies]
 eryndor-core = { path = "../eryndor-core" }
 eryndor-config = { path = "../eryndor-config" }
+eryndor-dialogue = { path = "../eryndor-dialogue" }
 bevy = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
