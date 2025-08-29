@@ -3,9 +3,9 @@ use bevy::prelude::*;
 #[derive(States, Debug, Clone, PartialEq, Eq, Hash, Default)]
 pub enum GameState {
     Loading,
-    #[default]
     MainMenu,
-    InGame,
+    #[default]
+    InGame,  // Skip main menu for development - dev console testing
     Paused,
     Debug,
 }

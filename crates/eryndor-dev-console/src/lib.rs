@@ -50,6 +50,7 @@ impl Plugin for EryndorDevConsolePlugin {
                 commands::process_godmode_commands,
                 commands::process_spawn_npc_commands,
                 commands::process_delete_entity_commands,
+                commands::process_zone_loading_commands,
             ))
             
             // Command registration
