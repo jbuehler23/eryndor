@@ -18,6 +18,7 @@ path = "src/bin/gltf_inspector.rs"
 eryndor-core = { path = "../eryndor-core" }
 eryndor-config = { path = "../eryndor-config" }
 eryndor-dialogue = { path = "../eryndor-dialogue" }
+eryndor-dev-console = { path = "../eryndor-dev-console" }
 
 # Bevy and core dependencies
 bevy = { workspace = true }

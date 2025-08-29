@@ -1,0 +1,48 @@
+{
+  "name": "npc-showcase",
+  "description": "Showcase area for testing all NPC types and interactions",
+  "spawn_point": [0.0, 15.0, 0.0],
+  "terrain_type": "flat",
+  "npcs": [
+    {
+      "npc_type": "merchant",
+      "position": [15.0, 15.0, 0.0],
+      "dialogue_id": "merchant_aldric",
+      "name": "Aldric Goldweaver"
+    },
+    {
+      "npc_type": "guard",
+      "position": [-15.0, 15.0, 0.0],
+      "dialogue_id": null,
+      "name": "Captain Marcus"
+    },
+    {
+      "npc_type": "villager",
+      "position": [0.0, 15.0, 15.0],
+      "dialogue_id": null,
+      "name": "Emma the Baker"
+    },
+    {
+      "npc_type": "questgiver",
+      "position": [0.0, 15.0, -15.0],
+      "dialogue_id": null,
+      "name": "Elder Thorne"
+    },
+    {
+      "npc_type": "informant",
+      "position": [10.0, 15.0, 10.0],
+      "dialogue_id": null,
+      "name": "Whisper Pete"
+    },
+    {
+      "npc_type": "noble",
+      "position": [-10.0, 15.0, -10.0],
+      "dialogue_id": null,
+      "name": "Lord Blackwood"
+    }
+  ],
+  "environment": {
+    "lighting": "golden_hour",
+    "weather": "clear"
+  }
+}

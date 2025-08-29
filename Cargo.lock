@@ -3774,6 +3774,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "eryndor-dev-console"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bevy 0.16.1",
+ "eryndor-config",
+ "eryndor-core",
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
+ "tracing",
+]
+
+[[package]]
 name = "eryndor-dialogue"
 version = "0.1.0"
 dependencies = [
@@ -3802,6 +3816,7 @@ dependencies = [
  "config",
  "eryndor-config",
  "eryndor-core",
+ "eryndor-dev-console",
  "eryndor-dialogue",
  "lightyear",
  "noise",

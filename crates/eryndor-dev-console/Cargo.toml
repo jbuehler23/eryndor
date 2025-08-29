@@ -1,0 +1,16 @@
+[package]
+name = "eryndor-dev-console"
+version = "0.1.0"
+edition = "2021"
+description = "Developer console and GM command system for Eryndor"
+authors = ["Joe"]
+
+[dependencies]
+eryndor-core = { path = "../eryndor-core" }
+eryndor-config = { path = "../eryndor-config" }
+bevy = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }

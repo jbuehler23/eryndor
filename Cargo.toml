@@ -3,6 +3,7 @@ members = [
     "crates/eryndor-core",
     "crates/eryndor-config", 
     "crates/eryndor-dialogue",
+    "crates/eryndor-dev-console",
     "crates/eryndor-progression",
     "crates/eryndor-quest",
     "crates/eryndor-character-controller",

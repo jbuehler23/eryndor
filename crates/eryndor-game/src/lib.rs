@@ -5,6 +5,7 @@
 use bevy::prelude::*;
 use avian3d::prelude::*;
 use eryndor_dialogue::prelude::*;
+use eryndor_dev_console::prelude::*;
 
 pub struct EryndorPlugin;
 
@@ -16,7 +17,8 @@ impl Plugin for EryndorPlugin {
             .insert_resource(Gravity(Vec3::NEG_Y * 9.81))
             
             // Add Eryndor crate plugins
-            .add_plugins(EryndorDialoguePlugin);
+            .add_plugins(EryndorDialoguePlugin)
+            .add_plugins(EryndorDevConsolePlugin);
     }
 }
 

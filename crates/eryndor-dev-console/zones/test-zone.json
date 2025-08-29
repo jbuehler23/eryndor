@@ -1,0 +1,30 @@
+{
+  "name": "test-zone",
+  "description": "Basic developer testing area with flat terrain",
+  "spawn_point": [0.0, 10.0, 0.0],
+  "terrain_type": "flat",
+  "npcs": [
+    {
+      "npc_type": "merchant",
+      "position": [10.0, 10.0, 10.0],
+      "dialogue_id": "merchant_aldric",
+      "name": "Test Merchant"
+    },
+    {
+      "npc_type": "guard",
+      "position": [-10.0, 10.0, 10.0],
+      "dialogue_id": null,
+      "name": "Test Guard"
+    },
+    {
+      "npc_type": "villager",
+      "position": [0.0, 10.0, 20.0],
+      "dialogue_id": null,
+      "name": "Test Villager"
+    }
+  ],
+  "environment": {
+    "lighting": "noon",
+    "weather": "clear"
+  }
+}
